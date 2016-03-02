@@ -694,8 +694,8 @@ namespace Sharp.Xmpp.Im
             {
                 var states = new Dictionary<Availability, string>() {
 						{ Availability.Away, "away" },
-						{ Availability.DoNotDisturb, "dnd" },
-						{ Availability.ExtendedAway, "xa" },
+						{ Availability.Dnd, "dnd" },
+						{ Availability.Xa, "xa" },
 						{ Availability.Chat, "chat" }
 					};
                 elems.Add(Xml.Element("show").Text(states[availability]));
