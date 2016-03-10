@@ -20,6 +20,16 @@ namespace Sharp.Xmpp.Client
     public class XmppClient : IDisposable
     {
         /// <summary>
+        /// If false the connection will not try to retrieve the rooster automatically
+        /// </summary>
+        public bool UseRooster
+        {
+            get { return im.UseRoster; }
+            set { im.UseRoster = value; }
+        }
+        
+
+        /// <summary>
         /// True if the instance has been disposed of.
         /// </summary>
         private bool disposed;
@@ -225,7 +235,7 @@ namespace Sharp.Xmpp.Client
         /// <summary>
         /// If true the session will be TLS/SSL-encrypted if the server supports it.
         /// </summary>
-        public bool Tls
+        public Core.TLSMode Tls
         {
             get
             {
@@ -452,6 +462,21 @@ namespace Sharp.Xmpp.Client
         }
 
         /// <summary>
+        /// The event that is raised when a bodyless message is received.
+        /// </summary>
+        public event EventHandler<MessageEventArgs> BodylessMessage
+        {
+            add
+            {
+                im.BodylessMessage += value;
+            }
+            remove
+            {
+                im.BodylessMessage -= value;
+            }
+        }
+
+        /// <summary>
         /// The event that is raised periodically for every file-transfer operation to
         /// inform subscribers of the progress of the operation.
         /// </summary>
@@ -600,7 +625,7 @@ namespace Sharp.Xmpp.Client
         /// <remarks>Use this constructor if you wish to connect to an XMPP server using
         /// an existing set of user credentials.</remarks>
         public XmppClient(string hostname, string username, string password,
-            int port = 5222, bool tls = true, RemoteCertificateValidationCallback validate = null)
+            int port = 5222, Core.TLSMode tls = Core.TLSMode.StartTLS, RemoteCertificateValidationCallback validate = null)
         {
             im = new XmppIm(hostname, username, password, port, tls, validate);
             // Initialize the various extension modules.
@@ -625,7 +650,7 @@ namespace Sharp.Xmpp.Client
         /// is not a valid port number.</exception>
         /// <remarks>Use this constructor if you wish to register an XMPP account using
         /// the in-band account registration process supported by some servers.</remarks>
-        public XmppClient(string hostname, int port = 5222, bool tls = true,
+        public XmppClient(string hostname, int port = 5222, Xmpp.Core.TLSMode tls = Core.TLSMode.StartTLS,
             RemoteCertificateValidationCallback validate = null)
         {
             im = new XmppIm(hostname, port, tls, validate);

@@ -1,4 +1,5 @@
-﻿using ARSoft.Tools.Net.Dns;
+﻿using ARSoft.Tools.Net;
+using ARSoft.Tools.Net.Dns;
 using Sharp.Xmpp.Core.Sasl;
 using System;
 using System.Collections.Concurrent;
@@ -238,7 +239,7 @@ namespace Sharp.Xmpp.Core
         /// <summary>
         /// If true the session will be TLS/SSL-encrypted if the server supports it.
         /// </summary>
-        public bool Tls
+        public TLSMode Tls
         {
             get;
             set;
@@ -339,12 +340,12 @@ namespace Sharp.Xmpp.Core
         /// <exception cref="ArgumentOutOfRangeException">The value of the port parameter
         /// is not a valid port number.</exception>
         public XmppCore(string hostname, string username, string password,
-            int port = 5222, bool tls = true, RemoteCertificateValidationCallback validate = null)
+            int port = 5222, TLSMode tls = TLSMode.StartTLS, RemoteCertificateValidationCallback validate = null)
         {
             moveNextSrvDNS(hostname);
             if (dnsCurrent != null)
             {
-                Hostname = dnsCurrent.Target;
+                Hostname = dnsCurrent.Target.ToString();
                 Port = dnsCurrent.Port;
             }
             else
@@ -374,13 +375,13 @@ namespace Sharp.Xmpp.Core
         /// string.</exception>
         /// <exception cref="ArgumentOutOfRangeException">The value of the port parameter
         /// is not a valid port number.</exception>
-        public XmppCore(string hostname, int port = 5222, bool tls = true,
+        public XmppCore(string hostname, int port = 5222, TLSMode tls =  TLSMode.StartTLS,
             RemoteCertificateValidationCallback validate = null)
         {
             moveNextSrvDNS(hostname);
             if (dnsCurrent != null)
             {
-                Hostname = dnsCurrent.Target;
+                Hostname = dnsCurrent.Target.ToString();
                 Port = dnsCurrent.Port;
             }
             else
@@ -411,7 +412,7 @@ namespace Sharp.Xmpp.Core
             };
             dnsIsInit = true;
 
-            DnsMessage dnsMessage = DnsClient.Default.Resolve("_xmpp-client._tcp." + domain, RecordType.Srv);
+            DnsMessage dnsMessage = DnsClient.Default.Resolve(DomainName.Parse("_xmpp-client._tcp." + domain), RecordType.Srv);
             if ((dnsMessage == null) || ((dnsMessage.ReturnCode != ReturnCode.NoError) && (dnsMessage.ReturnCode != ReturnCode.NxDomain)))
             {
                 //If DNS SRV records lookup fails then continue with the host name
@@ -472,7 +473,14 @@ namespace Sharp.Xmpp.Core
             try
             {
                 client = new TcpClient(Hostname, Port);
-                stream = client.GetStream();
+
+                if (Tls == TLSMode.TLSSocket)
+                {
+                    var ssl = new SslStream(client.GetStream());
+                    ssl.AuthenticateAsClient(Hostname);
+                    stream = ssl;
+                }
+
                 // Sets up the connection which includes TLS and possibly SASL negotiation.
                 SetupConnection(this.resource);
                 // We are connected.
@@ -918,9 +926,9 @@ namespace Sharp.Xmpp.Core
             if (feats["starttls"] != null)
             {
                 // TLS is mandatory and user opted out of it.
-                if (feats["starttls"]["required"] != null && Tls == false)
+                if (feats["starttls"]["required"] != null && Tls != TLSMode.StartTLS)
                     throw new AuthenticationException("The server requires TLS/SSL.");
-                if (Tls)
+                if (Tls == TLSMode.StartTLS)
                     feats = StartTls(Hostname, Validate);
             }
             // If no Username has been provided, don't perform authentication.
@@ -1341,5 +1349,24 @@ namespace Sharp.Xmpp.Core
             Connected = false;
             Authenticated = false;
         }
+    }
+
+    /// <summary>
+    /// Enumeration for selecting the TLS mode of the connection
+    /// </summary>
+    public enum TLSMode
+    {
+        /// <summary>
+        /// No TLS
+        /// </summary>
+        None,
+        /// <summary>
+        /// Use extension STARTTLS
+        /// </summary>
+        StartTLS,
+        /// <summary>
+        /// Use Ssl socket
+        /// </summary>
+        TLSSocket
     }
 }

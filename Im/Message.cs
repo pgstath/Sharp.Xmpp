@@ -254,6 +254,20 @@ namespace Sharp.Xmpp.Im
         }
 
         /// <summary>
+        /// Initializes a new instance of the Message class from the specified
+        /// instance.
+        /// </summary>
+        /// <param name="data">The message element</param>
+        /// <exception cref="ArgumentNullException">The Data parameter is null.</exception>
+        public Message(XmlElement data)
+        {
+
+            Data.ThrowIfNull("data");
+            type = ParseType(data.GetAttribute("type"));
+            element = data;
+        }
+
+        /// <summary>
         /// Parses the Message type from the specified string.
         /// </summary>
         /// <param name="value">The string to parse.</param>

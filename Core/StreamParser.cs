@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml;
 
 namespace Sharp.Xmpp.Core
@@ -53,6 +54,7 @@ namespace Sharp.Xmpp.Core
         /// XML-stream in it's 'xml:lang' attribute could not be found.</exception>
         public StreamParser(Stream stream, bool leaveOpen = false)
         {
+            
             stream.ThrowIfNull("stream");
             this.leaveOpen = leaveOpen;
             this.stream = stream;

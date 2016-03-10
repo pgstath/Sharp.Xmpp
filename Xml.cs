@@ -10,7 +10,7 @@ namespace Sharp.Xmpp
     /// Provides a factory method for creating XmlElement instances and adds
     /// a couple of useful shortcut extensions to the XmlElement class.
     /// </summary>
-    internal static class Xml
+    public static class Xml
     {
         /// <summary>
         /// Creates a new XmlElement instance.

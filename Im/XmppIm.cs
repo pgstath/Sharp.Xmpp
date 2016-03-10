@@ -18,6 +18,25 @@ namespace Sharp.Xmpp.Im
     /// <remarks>For implementation details, refer to RFC 3921.</remarks>
     public class XmppIm : IDisposable
     {
+
+        bool useRoster = true;
+
+        /// <summary>
+        /// If false the connection will not automatically retrieve the rooster
+        /// </summary>
+        public bool UseRoster
+        {
+            get
+            {
+                return useRoster;
+            }
+
+            set
+            {
+                useRoster = value;
+            }
+        }
+
         /// <summary>
         /// Provides access to the core facilities of XMPP.
         /// </summary>
@@ -113,7 +132,7 @@ namespace Sharp.Xmpp.Im
         /// <summary>
         /// If true the session will be TLS/SSL-encrypted if the server supports it.
         /// </summary>
-        public bool Tls
+        public TLSMode Tls
         {
             get
             {
@@ -251,6 +270,11 @@ namespace Sharp.Xmpp.Im
         public event EventHandler<MessageEventArgs> Message;
 
         /// <summary>
+        /// The event that is raised when a chat message is received.
+        /// </summary>
+        public event EventHandler<MessageEventArgs> BodylessMessage;
+
+        /// <summary>
         /// The event that is raised when a subscription request made by the JID
         /// associated with this instance has been approved.
         /// </summary>
@@ -299,7 +323,7 @@ namespace Sharp.Xmpp.Im
         /// <exception cref="ArgumentOutOfRangeException">The value of the port parameter
         /// is not a valid port number.</exception>
         public XmppIm(string hostname, string username, string password,
-            int port = 5222, bool tls = true, RemoteCertificateValidationCallback validate = null)
+            int port = 5222, TLSMode tls = TLSMode.StartTLS, RemoteCertificateValidationCallback validate = null)
         {
             core = new XmppCore(hostname, username, password, port, tls, validate);
             SetupEventHandlers();
@@ -321,7 +345,7 @@ namespace Sharp.Xmpp.Im
         /// string.</exception>
         /// <exception cref="ArgumentOutOfRangeException">The value of the port parameter
         /// is not a valid port number.</exception>
-        public XmppIm(string hostname, int port = 5222, bool tls = true,
+        public XmppIm(string hostname, int port = 5222, TLSMode tls = TLSMode.StartTLS,
             RemoteCertificateValidationCallback validate = null)
         {
             core = new XmppCore(hostname, port, tls, validate);
@@ -370,11 +394,19 @@ namespace Sharp.Xmpp.Im
                     return null;
                 // Establish a session (Refer to RFC 3921, Section 3. Session Establishment).
                 EstablishSession();
-                // Retrieve user's roster as recommended (Refer to RFC 3921, Section 7.3).
-                Roster roster = GetRoster();
-                // Send initial presence.
-                SendPresence(new Presence());
-                return roster;
+
+
+                //If roster is disabled don't send it nor the presence
+                if (useRoster)
+                {
+                    // Retrieve user's roster as recommended (Refer to RFC 3921, Section 7.3).
+                    Roster roster = GetRoster();
+                    // Send initial presence.
+                    SendPresence(new Presence());
+                    return roster;
+                }
+
+                return null;
             }
             catch (SocketException e)
             {
@@ -1324,7 +1356,7 @@ namespace Sharp.Xmpp.Im
                 return extensions;
             }
         }
-
+        
         /// <summary>
         /// Sends the specified presence stanza to the server.
         /// </summary>
@@ -1347,6 +1379,14 @@ namespace Sharp.Xmpp.Im
                     filter.Output(presence);
             }
             core.SendPresence(presence);
+        }
+
+        /// <summary>
+        /// Sends a default presence stanza to the server
+        /// </summary>
+        public void SendPresence()
+        {
+            SendPresence(new Presence());            
         }
 
         /// <summary>
@@ -1662,6 +1702,8 @@ namespace Sharp.Xmpp.Im
             // a body.
             if (message.Data["body"] != null)
                 Message.Raise(this, new MessageEventArgs(message.From, message));
+            else
+                BodylessMessage.Raise(this, new MessageEventArgs(message));
         }
 
         /// <summary>
