@@ -153,6 +153,11 @@ namespace Sharp.Xmpp.Client
         private VCardAvatars vcardAvatars;
 
         /// <summary>
+        /// Provides vcard functionality
+        /// </summary>
+        private VCards vcard;
+
+        /// <summary>
         /// Provides the Message Carbons extension
         /// </summary>
         private MessageCarbons messageCarbons;
@@ -1029,10 +1034,32 @@ namespace Sharp.Xmpp.Client
         /// <param name="jid">The string jid of the user</param>
         /// <param name="filepath">The filepath where the avatar will be stored</param>
         /// <param name="callback">The action that will be executed after the file has been downloaded</param>
-        public void GetvCardAvatar(string jid, string filepath, Action callback)
+        public void GetvCardAvatar(string jid, string filepath, Action<string, Jid> callback)
         {
             AssertValid();
             vcardAvatars.RequestAvatar(new Jid(jid), filepath, callback);
+        }
+
+        /// <summary>
+        /// Get the vcard based Avatar of user with Jid
+        /// </summary>
+        /// <param name="jid">The string jid of the user</param>
+        /// <param name="callback">The action that will be executed after the file has been downloaded</param>
+        public void GetvCardAvatar(string jid, Action<byte[], Jid> callback)
+        {
+            AssertValid();
+            vcardAvatars.RequestAvatar(new Jid(jid), callback);
+        }
+
+        /// <summary>
+        /// Get the vcard of user with Jid
+        /// </summary>
+        /// <param name="jid">The string jid of the user</param>
+        /// <param name="callback">The action that will be executed after the file has been downloaded</param>
+        public void GetvCard(string jid, Action<VCardsData, Jid> callback)
+        {
+            AssertValid();
+            vcard.RequestvCards(new Jid(jid), callback);
         }
 
         /// <summary>
@@ -1755,6 +1782,7 @@ namespace Sharp.Xmpp.Client
             chatStateNotifications = im.LoadExtension<ChatStateNotifications>();
             bitsOfBinary = im.LoadExtension<BitsOfBinary>();
             vcardAvatars = im.LoadExtension<VCardAvatars>();
+            vcard = im.LoadExtension<VCards>();
             cusiqextension = im.LoadExtension<CustomIqExtension>();
         }
     }

@@ -144,6 +144,11 @@
         vCardsAvatars,
 
         /// <summary>
+        /// An extestion for downloading-uploading vcard data
+        /// </summary>
+        vCards,
+
+        /// <summary>
         /// Wrapper for providing Custom IQ Extensions
         /// </summary>
         CustomIqExtension,

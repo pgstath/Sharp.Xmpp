@@ -52,8 +52,8 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ARSoft.Tools.Net, Version=1.8.1.0, Culture=neutral, PublicKeyToken=1940454cd762ec57, processorArchitecture=MSIL">
-      <HintPath>packages\ARSoft.Tools.Net.1.8.1\lib\ARSoft.Tools.Net.dll</HintPath>
+    <Reference Include="ARSoft.Tools.Net, Version=1.8.2.0, Culture=neutral, PublicKeyToken=1940454cd762ec57, processorArchitecture=MSIL">
+      <HintPath>packages\ARSoft.Tools.Net.1.8.2\lib\net35\ARSoft.Tools.Net.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -70,6 +70,7 @@
     <Compile Include="Core\ErrorEventArgs.cs" />
     <Compile Include="Extensions\CustomExtension\CustomIqExtension.cs" />
     <Compile Include="Extensions\CustomExtension\CustomIqRequestDelegate.cs" />
+    <Compile Include="Extensions\vCard.cs" />
     <Compile Include="Extensions\XEP-0004\DataForms.cs" />
     <Compile Include="Extensions\XEP-0004\Dataforms\BooleanField.cs" />
     <Compile Include="Extensions\XEP-0004\Dataforms\CancelForm.cs" />
