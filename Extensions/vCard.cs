@@ -2,18 +2,18 @@
 using Sharp.Xmpp.Im;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Xml;
 using System.Xml.Linq;
 
 namespace Sharp.Xmpp.Extensions
 {
-    /// <summary>
-    /// Implements the 'vCard based Avatars' extension as defined in XEP-0153.
-    /// </summary>
-    internal class VCardAvatars : XmppExtension, IInputFilter<Iq>
+ 
+    internal class VCards : XmppExtension, IInputFilter<Iq>
     {
         /// <summary>
         /// A reference to the 'Entity Capabilities' extension instance.
@@ -30,9 +30,9 @@ namespace Sharp.Xmpp.Extensions
             get
             {
                 return new string[] {
-					 "vcard-temp:x:update" ,
-					 "vcard-temp"
-				};
+                     "vcard-temp:x:update" ,
+                     "vcard-temp"
+                };
             }
         }
 
@@ -44,7 +44,7 @@ namespace Sharp.Xmpp.Extensions
         {
             get
             {
-                return Extension.vCardsAvatars;
+                return Extension.vCards;
             }
         }
 
@@ -122,25 +122,10 @@ namespace Sharp.Xmpp.Extensions
             }
         }
 
-        /// <summary>
-        /// Requests the avatar image with the specified hash from the node service
-        /// running at the specified JID. It downloads it asynchronysly and executes
-        /// a specified callback action when finished
-        /// </summary>
-        /// <param name="jid">The JID of the node service to request the avatar
-        /// image from.</param>
-        /// <param name="filepath">The full location of the file that the Avatar file we be written.</param>
-        /// <param name="callback">A callback Action to be invoked after the end of the file write. </param>
-        /// <exception cref="ArgumentNullException">The jid or the filepath parameter is null.</exception>
-        /// <exception cref="XmppErrorException">The server returned an XMPP error code.
-        /// Use the Error property of the XmppErrorException to obtain the specific
-        /// error condition.</exception>
-        /// <exception cref="XmppException">The server returned invalid data or another
-        /// unspecified XMPP error occurred.</exception>
-        public void RequestAvatar(Jid jid, string filepath, Action<string,  Jid> callback)
+        public void RequestvCards(Jid jid, Action<VCardsData, Jid> callback)
         {
             jid.ThrowIfNull("jid");
-            filepath.ThrowIfNull("filePath");
+            VCardsData vCD = new VCardsData(); 
 
             //Make the request
             var xml = Xml.Element("vCard", "vcard-temp");
@@ -151,70 +136,29 @@ namespace Sharp.Xmpp.Extensions
                 XmlElement query = iq.Data["vCard"];
                 if (iq.Data["vCard"].NamespaceURI == "vcard-temp")
                 {
-                    XElement root = XElement.Parse(iq.Data.OuterXml);
-                    XNamespace aw = "vcard-temp"; //SOS the correct namespace
-                    IEnumerable<string> b64collection = (from el in root.Descendants(aw + "BINVAL")
-                                                         select (string)el);
-                    string b64 = null;
-                    if (b64collection != null)
-                    {
-                        b64 = b64collection.FirstOrDefault();
-
-                        if (b64 != null)
-                        {
-
-                            try
-                            {
-                                byte[] data = Convert.FromBase64String(b64);
-                                if (data != null)
-                                {
-                                    string dir = Path.GetDirectoryName(filepath);
-                                    if (!Directory.Exists(dir))
-                                    {
-                                        Directory.CreateDirectory(dir);
-                                    }
-
-                                    using (var file = new FileStream(filepath, FileMode.Create, System.IO.FileAccess.Write))
-                                    {
-                                        file.Write(data, 0, data.Length);
-                                    }
-                                    if (callback != null)
-                                    {
-                                        
-                                        callback.Invoke(filepath, jid);
-                                    }
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                System.Diagnostics.Debug.WriteLine("Error downloading and writing avatar file" + e.StackTrace + e.ToString());
-                                //Exception is not contained here. Fix?
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-
-
-        public void RequestAvatar(Jid jid, Action<byte[], Jid> callback)
-        {
-            jid.ThrowIfNull("jid");
-            //filepath.ThrowIfNull("filePath");
-
-            //Make the request
-            var xml = Xml.Element("vCard", "vcard-temp");
-
-            //The Request is Async
-            im.IqRequestAsync(IqType.Get, jid, im.Jid, xml, null, (id, iq) =>
-            {
-                XmlElement query = iq.Data["vCard"];
-                if (iq.Data["vCard"].NamespaceURI == "vcard-temp")
-                {
-                    XElement root = XElement.Parse(iq.Data.OuterXml);
+                    XElement root = XElement.Parse(iq.Data.OuterXml); 
                     XNamespace aw = "vcard-temp"; //SOS the correct namespace
                     IEnumerable<string> b64collection = (from el in root.Descendants(aw + "BINVAL") select (string)el);
+                    IEnumerable<string> nicknamecollection = (from el in root.Descendants(aw + "NICKNAME") select (string)el);
+                    IEnumerable<string> fullnamecollection = (from el in root.Descendants(aw + "FN") select (string)el);
+                    IEnumerable<string> familynamecollection = (from el in root.Descendants(aw + "FAMILY") select (string)el);
+                    IEnumerable<string> firstnamecollection = (from el in root.Descendants(aw + "GIVEN") select (string)el);
+                    IEnumerable<string> urlcollection = (from el in root.Descendants(aw + "URL") select (string)el);
+                    IEnumerable<string> birthdaycollection = (from el in root.Descendants(aw + "BDAY") select (string)el);
+                    IEnumerable<string> orgnamecollection = (from el in root.Descendants(aw + "ORGNAME") select (string)el);
+                    IEnumerable<string> titlecollection = (from el in root.Descendants(aw + "TITLE") select (string)el);
+                    IEnumerable<string> rolecollection = (from el in root.Descendants(aw + "ROLE") select (string)el);
+
+                    vCD.NickName = nicknamecollection.FirstOrDefault();
+                    vCD.FullName = fullnamecollection.FirstOrDefault();
+                    vCD.FamilyName = familynamecollection.FirstOrDefault();
+                    vCD.FirstName = firstnamecollection.FirstOrDefault();
+                    vCD.URL = urlcollection.FirstOrDefault();
+                    vCD.Birthday = birthdaycollection.FirstOrDefault();
+                    vCD.OrgName = orgnamecollection.FirstOrDefault();
+                    vCD.Title = titlecollection.FirstOrDefault();
+                    vCD.Role = rolecollection.FirstOrDefault();
+
                     string b64 = null;
                     if (b64collection != null)
                     {
@@ -222,34 +166,139 @@ namespace Sharp.Xmpp.Extensions
 
                         if (b64 != null)
                         {
-
                             try
                             {
                                 byte[] data = Convert.FromBase64String(b64);
                                 if (data != null)
                                 {
-                                    callback.Invoke(data, jid);
+                                    vCD.Avatar = data;
                                 }
                             }
                             catch (Exception e)
                             {
-                                System.Diagnostics.Debug.WriteLine("Error downloading and writing avatar file" + e.StackTrace + e.ToString());
+                                System.Diagnostics.Debug.WriteLine("Error downloading vcard data" + e.StackTrace + e.ToString());
                                 //Exception is not contained here. Fix?
                             }
                         }
                     }
+
+                    callback.Invoke(vCD, jid);
                 }
             });
         }
 
         /// <summary>
-        /// Initializes a new instance of the vCard-Avatar class.
+        /// Initializes a new instance of the vCard class.
         /// </summary>
         /// <param name="im">A reference to the XmppIm instance on whose behalf this
         /// instance is created.</param>
-        public VCardAvatars(XmppIm im)
+        public VCards(XmppIm im)
             : base(im)
         {
         }
+    }
+
+    /// <summary>
+    /// Represents the VCards Data.
+    /// </summary>
+    [Serializable]
+    public sealed class VCardsData
+    {
+
+        /// <summary>
+        /// The FN from vCard.
+        /// </summary>
+        public string FullName
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// The FAMILY from vCard.
+        /// </summary>
+        public string FamilyName
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// The GIVEN from vCard.
+        /// </summary>
+        public string FirstName
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// The nickname from vCard.
+        /// </summary>
+        public string NickName
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// The URL from vCard.
+        /// </summary>
+        public string URL
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// The avatar from vCard.
+        /// </summary>
+        public byte[] Avatar
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// The BDAY from vCard.
+        /// </summary>
+        public string Birthday
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// The ORGNAME from vCard.
+        /// </summary>
+        public string OrgName
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// The TITLE from vCard.
+        /// </summary>
+        public string Title
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// The ROLE from vCard.
+        /// </summary>
+        public string Role
+        {
+            get;
+            set;
+        }
+
+
+
+
+
+
     }
 }

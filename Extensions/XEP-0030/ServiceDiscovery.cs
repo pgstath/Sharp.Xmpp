@@ -198,7 +198,7 @@ namespace Sharp.Xmpp.Extensions
         /// null.</exception>
         /// <exception cref="NotSupportedException">The query could not be
         /// performed or the response was invalid.</exception>
-        public IEnumerable<Item> GetItems(Jid jid)
+        public IEnumerable<XmppItem> GetItems(Jid jid)
         {
             return QueryItems(jid);
         }
@@ -312,7 +312,7 @@ namespace Sharp.Xmpp.Extensions
         /// is null.</exception>
         /// <exception cref="NotSupportedException">The query could not be
         /// performed or the response was invalid.</exception>
-        private IEnumerable<Item> QueryItems(Jid jid)
+        private IEnumerable<XmppItem> QueryItems(Jid jid)
         {
             jid.ThrowIfNull("jid");
             Iq iq = im.IqRequest(IqType.Get, jid, im.Jid,
@@ -323,7 +323,7 @@ namespace Sharp.Xmpp.Extensions
             var query = iq.Data["query"];
             if (query == null || query.NamespaceURI != "http://jabber.org/protocol/disco#items")
                 throw new NotSupportedException("Erroneous response: " + iq);
-            ISet<Item> items = new HashSet<Item>();
+            ISet<XmppItem> items = new HashSet<XmppItem>();
             foreach (XmlElement e in query.GetElementsByTagName("item"))
             {
                 string _jid = e.GetAttribute("jid"), node = e.GetAttribute("node"),
@@ -333,7 +333,7 @@ namespace Sharp.Xmpp.Extensions
                 try
                 {
                     Jid itemJid = new Jid(_jid);
-                    items.Add(new Item(itemJid, String.IsNullOrEmpty(node) ? null : node,
+                    items.Add(new XmppItem(itemJid, String.IsNullOrEmpty(node) ? null : node,
                         String.IsNullOrEmpty(name) ? null : name));
                 }
                 catch (ArgumentException)

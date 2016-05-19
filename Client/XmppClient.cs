@@ -1,10 +1,12 @@
 ﻿using Sharp.Xmpp.Extensions;
+using Sharp.Xmpp.Extensions.Dataforms;
 using Sharp.Xmpp.Im;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Net.Security;
+using System.Threading.Tasks;
 
 namespace Sharp.Xmpp.Client
 {
@@ -29,7 +31,25 @@ namespace Sharp.Xmpp.Client
         /// and presence funcionality.
         /// </summary>
         private XmppIm im;
+		
+        /// <summary>
+        /// Provices access to the 'Multi-User Chat' XMPP extension functionality
+        /// </summary>
+        private MultiUserChat multiUserChat;
 
+        private ServiceAdministration serviceAdministration;
+        private AdHocCommands adHocCommands;
+
+        /// <summary>
+        /// Provides access to the 'Message Archiving' XMPP extension functionality.
+        /// </summary>
+        private MessageArchiving messageArchiving;
+
+        /// <summary>
+        /// Provices access to the 'Message Archive management' XMPP extension functionality.
+        /// </summary>
+        private MessageArchiveManagement messageArchiveManagement;
+		
         /// <summary>
         /// Provides access to the 'Software Version' XMPP extension functionality.
         /// </summary>
@@ -80,6 +100,11 @@ namespace Sharp.Xmpp.Client
         /// </summary>
         private UserTune userTune;
 
+        /// <summary>
+        /// Provices access to the 'Direct MUC invitations' XMPP extension functionality;
+        /// </summary>
+        private DirectMucInvitations directMucInvitations;
+		
 #if WINDOWSPLATFORM
 		/// <summary>
 		/// Provides access to the 'User Avatar' XMPP extension functionality.
@@ -151,6 +176,11 @@ namespace Sharp.Xmpp.Client
         /// Provides vcard Based Avatar functionality
         /// </summary>
         private VCardAvatars vcardAvatars;
+
+        /// <summary>
+        /// Provides vcard functionality
+        /// </summary>
+        private VCards vcard;
 
         /// <summary>
         /// Provides the Message Carbons extension
@@ -377,6 +407,21 @@ namespace Sharp.Xmpp.Client
             }
         }
 
+		/// <summary>
+        /// The event that is raised when a direct muc invitation is received.
+        /// </summary>
+        public event EventHandler<DirectMucInvitation> DirectMucInvitationReceived
+        {
+            add
+            {
+                directMucInvitations.DirectMucInvitationReceived += value;
+            }
+            remove
+            {
+                directMucInvitations.DirectMucInvitationReceived -= value;
+            }
+        }
+		
         /// <summary>
         /// The event that is raised when a mood notification has been received.
         /// </summary>
@@ -448,6 +493,21 @@ namespace Sharp.Xmpp.Client
             remove
             {
                 im.Message -= value;
+            }
+        }
+
+        /// <summary>
+        /// The event that is raised when an error message is received.
+        /// </summary>
+        public event EventHandler<MessageEventArgs> ErrorMessage
+        {
+            add
+            {
+                im.ErrorMessage += value;
+            }
+            remove
+            {
+                im.ErrorMessage -= value;
             }
         }
 
@@ -1029,10 +1089,32 @@ namespace Sharp.Xmpp.Client
         /// <param name="jid">The string jid of the user</param>
         /// <param name="filepath">The filepath where the avatar will be stored</param>
         /// <param name="callback">The action that will be executed after the file has been downloaded</param>
-        public void GetvCardAvatar(string jid, string filepath, Action callback)
+        public void GetvCardAvatar(string jid, string filepath, Action<string, Jid> callback)
         {
             AssertValid();
             vcardAvatars.RequestAvatar(new Jid(jid), filepath, callback);
+        }
+
+        /// <summary>
+        /// Get the vcard based Avatar of user with Jid
+        /// </summary>
+        /// <param name="jid">The string jid of the user</param>
+        /// <param name="callback">The action that will be executed after the file has been downloaded</param>
+        public void GetvCardAvatar(string jid, Action<byte[], Jid> callback)
+        {
+            AssertValid();
+            vcardAvatars.RequestAvatar(new Jid(jid), callback);
+        }
+
+        /// <summary>
+        /// Get the vcard of user with Jid
+        /// </summary>
+        /// <param name="jid">The string jid of the user</param>
+        /// <param name="callback">The action that will be executed after the file has been downloaded</param>
+        public void GetvCard(string jid, Action<VCardsData, Jid> callback)
+        {
+            AssertValid();
+            vcard.RequestvCards(new Jid(jid), callback);
         }
 
         /// <summary>
@@ -1545,6 +1627,71 @@ namespace Sharp.Xmpp.Client
         }
 
         /// <summary>
+        /// Fetch message history from the server.
+        ///
+        /// The 'start' and 'end' attributes MAY be specified to indicate a date range.
+        ///
+        /// If the 'with' attribute is omitted then collections with any JID are returned.
+        ///
+        /// If only 'start' is specified then all collections on or after that date should be returned.
+        ///
+        /// If only 'end' is specified then all collections prior to that date should be returned.
+        /// </summary>
+        /// <param name="pageRequest">Paging options</param>
+        /// <param name="start">Optional start date range to query</param>
+        /// <param name="end">Optional enddate range to query</param>
+        /// <param name="with">Optional JID to filter archive results by</param>
+        public XmppPage<ArchivedChatId> GetArchivedChatIds(XmppPageRequest pageRequest, DateTimeOffset? start = null, DateTimeOffset? end = null, Jid with = null)
+        {
+            return messageArchiving.GetArchivedChatIds(pageRequest, start, end, with);
+        }
+
+        /// <summary>
+        /// Fetch a page of archived messages from a chat
+        /// </summary>
+        /// <param name="pageRequest">Paging options</param>
+        /// <param name="with">The id of the entity that the chat was with</param>
+        /// <param name="start">The start time of the chat</param>
+        public ArchivedChatPage GetArchivedChat(XmppPageRequest pageRequest, Jid with, DateTimeOffset start)
+        {
+            return messageArchiving.GetArchivedChat(pageRequest, with, start);
+        }
+
+        /// <summary>
+        /// Fetch a page of archived messages
+        /// </summary>
+        /// <param name="pageRequest">Paging options</param>
+        /// <param name="with">Optional filter to only return messages if they match the supplied JID</param>
+        /// <param name="start">Optional filter to only return messages whose timestamp is equal to or later than the given timestamp.</param>
+        /// <param name="end">Optional filter to only return messages whose timestamp is equal to or earlier than the timestamp given in the 'end' field.</param>
+        public Task<XmppPage<Message>> GetArchivedMessages(XmppPageRequest pageRequest, Jid with = null, DateTimeOffset? start = null, DateTimeOffset? end = null)
+        {
+            return messageArchiveManagement.GetArchivedMessages(pageRequest, with, null, start, end);
+        }
+
+        /// <summary>
+        /// Fetch a page of archived messages from a multi-user chat room
+        /// </summary>
+        /// <param name="pageRequest">Paging options</param>
+        /// <param name="roomId">The JID of the room</param>
+        /// <param name="start">Optional filter to only return messages whose timestamp is equal to or later than the given timestamp.</param>
+        /// <param name="end">Optional filter to only return messages whose timestamp is equal to or earlier than the timestamp given in the 'end' field.</param>
+        public Task<XmppPage<Message>> GetArchivedMucMessages(XmppPageRequest pageRequest, Jid roomId, DateTimeOffset? start = null, DateTimeOffset? end = null)
+        {
+            return messageArchiveManagement.GetArchivedMessages(pageRequest, roomId, roomId, start, end);
+        }
+
+        /// <summary>
+        /// Fetch a page of archived messages from a chat
+        /// </summary>
+        /// <param name="pageRequest">Paging options</param>
+        /// <param name="chatId">The id of the chat</param>
+        public ArchivedChatPage GetArchivedChat(XmppPageRequest pageRequest, ArchivedChatId chatId)
+        {
+            return messageArchiving.GetArchivedChat(pageRequest, chatId);
+        }
+		
+        /// <summary>
         /// Unblocks all communication to and from the XMPP entity with the specified
         /// JID.
         /// </summary>
@@ -1617,6 +1764,91 @@ namespace Sharp.Xmpp.Client
         }
 
         /// <summary>
+        /// Invite a user to a multi-user chat
+        /// </summary>
+        /// <param name="mucService">The MUC service which hosts the room</param>
+        /// <param name="roomName">The name of the room</param>
+        /// <param name="userId">The Jid of the user to invite</param>
+        /// <param name="reason">An optional reason for inviting the user to the room</param>
+        /// <param name="password">The password for the room</param>
+        public void InviteUserToMuc(Jid mucService, string roomName, Jid userId, string reason = null, string password = null)
+        {
+            directMucInvitations.InviteUserToMuc(mucService, roomName, userId, reason, password);
+        }
+
+        /// <summary>
+        /// Remove a user from a MUC
+        /// </summary>
+        /// <param name="mucService">The MUC service which hosts the room</param>
+        /// <param name="roomName">The name of the room</param>>
+        /// <param name="userName">The username of the user who should be removed</param>
+        /// <param name="reason">The (optional) reason that the user is being removed</param>
+        public bool RemoveUserFromMuc(Jid mucService, string roomName, string userName, string reason = null)
+        {
+            return multiUserChat.KickUser(mucService, roomName, userName, reason);
+        }
+
+        /// <summary>
+        /// Get a list of multi-user chat services that are hosted on the server
+        /// </summary>
+        public IList<Jid> GetMucServices()
+        {
+            return multiUserChat.GetMucServices();
+        }
+
+        /// <summary>
+        /// Create a multi-user chat room
+        /// </summary>
+        /// <param name="mucService">The MUC service which hosts the room</param>
+        /// <param name="roomName">The name of the room</param>
+        /// <param name="password">An optional password for the room</param>
+        public Task<JoinRoomResult> JoinRoom(Jid mucService, string roomName, string password = "")
+        {
+            return multiUserChat.JoinRoom(mucService, roomName, password);
+        }
+
+        /// <summary>
+        /// Leave a multi-user chat room
+        /// </summary>
+        /// <param name="mucService">The MUC service that is hosting the room</param>
+        /// <param name="roomName">The name of the room to leave</param>
+        /// <param name="status">An optional parting message</param>
+        public Task LeaveRoom(Jid mucService, string roomName, string status = "")
+        {
+            return multiUserChat.LeaveRoom(mucService, roomName, status);
+        }
+
+        /// <summary>
+        /// Get a list of multi-user chat rooms that are available on a service
+        /// </summary>
+        /// <param name="mucService">The Jid of the multi-user chat service to query</param>
+        public IList<XmppItem> GetRooms(Jid mucService)
+        {
+            return multiUserChat.GetRooms(mucService);
+        }
+
+        /// <summary>
+        /// Set the configuration of a multi-user chat room. Use GetRoomConfiguration first to discover configurable parameters.
+        /// </summary>
+        /// <param name="mucService">The MUC service that hosts the room</param>
+        /// <param name="roomName">The name of the room to configure</param>
+        /// <param name="form">Configuration values for the room</param>
+        public void SetRoomConfiguration(Jid mucService, string roomName, SubmitForm form)
+        {
+            multiUserChat.SetRoomConfiguration(mucService, roomName, form);
+        }
+
+        /// <summary>
+        /// Get the configuration of a multi-user chat room.
+        /// </summary>
+        /// <param name="mucService">The MUC service that hosts the room</param>
+        /// <param name="roomName">The name of the room to configure</param>
+        public RequestForm GetRoomConfiguration(Jid mucService, string roomName)
+        {
+            return multiUserChat.GetRoomConfiguration(mucService, roomName);
+        }
+		
+        /// <summary>
         /// Returns an enumerable collection of blocked contacts.
         /// </summary>
         /// <returns>An enumerable collection of JIDs which are on the client's
@@ -1659,6 +1891,52 @@ namespace Sharp.Xmpp.Client
             return items;
         }
 
+       /// <summary>
+        /// Gets the list of commands the XMPP server supports for the current user
+        /// </summary>
+        /// <returns></returns>
+        public List<AdHocCommand> GetAdHocCommands()
+        {
+            AssertValid();
+            return adHocCommands.GetAdHocCommands();
+        }
+
+        /// <summary>
+        /// Creates a new user
+        /// </summary>
+        public void AddUser(Jid userId, string password, string verifiedPassword, string email, string firstName, string lastName)
+        {
+            AssertValid();
+            serviceAdministration.AddUser(userId, password, verifiedPassword, email, firstName, lastName);
+        }
+
+        /// <summary>
+        /// Deletes the user with the given ID
+        /// </summary>
+        public void DeleteUser(Jid userId)
+        {
+            AssertValid();
+            serviceAdministration.DeleteUser(userId);
+        }
+
+        /// <summary>
+        /// Enables the user with the given ID
+        /// </summary>
+        public void EnableUser(Jid userId)
+        {
+            AssertValid();
+            serviceAdministration.EnableUser(userId);
+        }
+
+        /// <summary>
+        /// Disables the user with the given ID
+        /// </summary>
+        public void DisableUser(Jid userId)
+        {
+            AssertValid();
+            serviceAdministration.DisableUser(userId);
+        }
+		
         /// <summary>
         /// Closes the connection with the XMPP server. This automatically disposes
         /// of the object.
@@ -1755,7 +2033,14 @@ namespace Sharp.Xmpp.Client
             chatStateNotifications = im.LoadExtension<ChatStateNotifications>();
             bitsOfBinary = im.LoadExtension<BitsOfBinary>();
             vcardAvatars = im.LoadExtension<VCardAvatars>();
+            vcard = im.LoadExtension<VCards>();
             cusiqextension = im.LoadExtension<CustomIqExtension>();
+            messageArchiving = im.LoadExtension<MessageArchiving>();
+            messageArchiveManagement = im.LoadExtension<MessageArchiveManagement>();
+            multiUserChat = im.LoadExtension<MultiUserChat>();
+            serviceAdministration = im.LoadExtension<ServiceAdministration>();
+            adHocCommands = im.LoadExtension<AdHocCommands>();
+            directMucInvitations = im.LoadExtension<DirectMucInvitations>();
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Xml;
+using System.Xml.Linq;
 
 namespace Sharp.Xmpp.Core
 {
@@ -97,6 +98,14 @@ namespace Sharp.Xmpp.Core
 				{ "error", IqType.Error }
 			};
             return dict[value];
+        }
+
+        /// <summary>
+        /// Converts the IQ XML to an XDocument
+        /// </summary>
+        public XDocument ToXDocument()
+        {
+            return XDocument.Parse(ToString());
         }
     }
 }

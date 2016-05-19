@@ -6,7 +6,7 @@ namespace Sharp.Xmpp.Extensions
     /// Represents an item of an XMPP entity as defined in XEP-0030.
     /// </summary>
     [Serializable]
-    internal class Item
+    public class XmppItem
     {
         /// <summary>
         /// The JID of the item.
@@ -43,7 +43,7 @@ namespace Sharp.Xmpp.Extensions
         /// <param name="name">The name of the item.</param>
         /// <exception cref="ArgumentNullException">The jid parameter is
         /// null.</exception>
-        public Item(Jid jid, string node = null, string name = null)
+        public XmppItem(Jid jid, string node = null, string name = null)
         {
             jid.ThrowIfNull("jid");
             Jid = jid;
