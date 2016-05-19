@@ -251,6 +251,11 @@ namespace Sharp.Xmpp.Im
         public event EventHandler<MessageEventArgs> Message;
 
         /// <summary>
+        /// The event that is raised when an error message is received.
+        /// </summary>
+        public event EventHandler<MessageEventArgs> ErrorMessage;
+
+        /// <summary>
         /// The event that is raised when a subscription request made by the JID
         /// associated with this instance has been approved.
         /// </summary>
@@ -1658,12 +1663,15 @@ namespace Sharp.Xmpp.Im
                 }
             }
 
-            // Only raise the Message event, if the message stanza actually contains
-            // a body.
-            if (message.Data["body"] != null)
+            if (message.Type == MessageType.Error)
+            {
+                ErrorMessage.Raise(this, new MessageEventArgs(message.From, message));
+            }
+            else if (message.Data["body"] != null)
+            {
                 Message.Raise(this, new MessageEventArgs(message.From, message));
+            }
         }
-
         /// <summary>
         /// Processes presence stanzas containing availability and status
         /// information.

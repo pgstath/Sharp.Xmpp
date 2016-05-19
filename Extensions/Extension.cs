@@ -157,6 +157,40 @@
         /// An extension for receiving messages directed to the bare Jid
         /// on multiple resources that have opted-in
         /// </summary>
-        MessageCarbons
+        MessageCarbons,
+
+        /// <summary>
+        /// An extension for the server-side archiving and retrieval of XMPP messages.
+        /// </summary>
+        /// <remarks>Defined in XEP-0136.</remarks>
+        MessageArchiving,
+
+        /// <summary>
+        /// An extension to record conversations that take place on clients that do not support local history storage, to synchronise conversation history seamlessly between multiple clients, to read the history of a MUC room, or to view old items in a pubsub node.
+        /// </summary>
+        /// <remarks>Defined in XEP-0313.</remarks>
+        MessageArchiveManagement,
+
+        /// <summary>
+        /// An extension whereby multiple XMPP users can exchange messages in the context of a room or channel, similar to Internet Relay Chat (IRC).
+        /// </summary>
+        /// <remarks>Defined in XEP-0045.</remarks>
+        MultiUserChat,
+
+        /// <summary>
+        /// Service-level tasks that administrators often need to perform in relation to Jabber/XMPP servers and components
+        /// </summary>
+        ServiceAdministration,
+
+        /// <summary>
+        /// An extension that enables an entity to initiate a command session where there is no preferred namespace
+        /// </summary>
+        AdHocCommands,
+
+        /// <summary>
+        /// A method for sending an invitation directly from the user to the contact.
+        /// </summary>
+        /// <remarks>Defined in XEP-0249.</remarks>
+        DirectMucInvitations
     }
 }

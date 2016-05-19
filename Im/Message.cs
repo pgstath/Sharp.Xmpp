@@ -1,7 +1,9 @@
-﻿using System;
+﻿using Sharp.Xmpp.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Security;
 using System.Xml;
 
 namespace Sharp.Xmpp.Im
@@ -15,11 +17,6 @@ namespace Sharp.Xmpp.Im
         /// The type of the message stanza.
         /// </summary>
         private MessageType type;
-
-        /// <summary>
-        /// The time at which the message was originally sent.
-        /// </summary>
-        private DateTime timestamp = DateTime.Now;
 
         /// <summary>
         /// The type of the message stanza.
@@ -42,21 +39,12 @@ namespace Sharp.Xmpp.Im
         /// <summary>
         /// The time at which the message was originally sent.
         /// </summary>
-        public DateTime Timestamp
-        {
-            get
-            {
-                // Refer to XEP-0203.
-                var delay = element["delay"];
-                if (delay != null && delay.NamespaceURI == "urn:xmpp:delay")
-                {
-                    DateTime result;
-                    if (DateTime.TryParse(delay.GetAttribute("stamp"), out result))
-                        return result;
-                }
-                return timestamp;
-            }
-        }
+        public DateTimeOffset Timestamp { get; protected set; }
+
+        /// <summary>
+        /// A forwarded message that is contained within this message, if there is one present.
+        /// </summary>
+        public Message ForwardedMessage { get; protected set; }
 
         /// <summary>
         /// The conversation thread this message belongs to.
@@ -193,9 +181,10 @@ namespace Sharp.Xmpp.Im
             AlternateSubjects = new XmlDictionary(element, "subject", "xml:lang");
             AlternateBodies = new XmlDictionary(element, "body", "xml:lang");
             Type = type;
-            Body = body;
-            Subject = subject;
+            Body = SecurityElement.Escape(body);
+            Subject = SecurityElement.Escape(subject);
             Thread = thread;
+            Timestamp = DelayedDelivery.GetDelayedTimestampOrNow(element);
         }
 
         /// <summary>
@@ -233,6 +222,7 @@ namespace Sharp.Xmpp.Im
                     AlternateSubjects.Add(pair.Key, pair.Value);
             }
             Thread = thread;
+            Timestamp = DelayedDelivery.GetDelayedTimestampOrNow(element);
         }
 
         /// <summary>
@@ -245,12 +235,34 @@ namespace Sharp.Xmpp.Im
         /// <exception cref="ArgumentException">The 'type' attribute of
         /// the specified message stanza is invalid.</exception>
         internal Message(Core.Message message)
+            : this(message.Data, DelayedDelivery.GetDelayedTimestampOrNow(message.Data))
         {
-            message.ThrowIfNull("message");
-            type = ParseType(message.Data.GetAttribute("type"));
-            element = message.Data;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the Message class from the specified
+        /// instance.
+        /// </summary>
+        /// <param name="messageNode">A message xml node</param>
+        /// <param name="timestamp">The timestamp to use for the message</param>
+        /// <exception cref="ArgumentNullException">The message parameter is null.</exception>
+        /// <exception cref="ArgumentException">The 'type' attribute of
+        /// the specified message stanza is invalid.</exception>
+        internal Message(XmlElement messageNode, DateTimeOffset timestamp)
+        {
+            messageNode.ThrowIfNull("messageNode");
+            type = ParseType(messageNode.GetAttribute("type"));
+            element = messageNode;
             AlternateSubjects = new XmlDictionary(element, "subject", "xml:lang");
             AlternateBodies = new XmlDictionary(element, "body", "xml:lang");
+            Timestamp = timestamp;
+
+            var forwardedMessageNode = element["forwarded"];
+            if (forwardedMessageNode != null && forwardedMessageNode.NamespaceURI == "urn:xmpp:forward:0")
+            {
+                var forwardedTimestamp = DelayedDelivery.GetDelayedTimestampOrNow(forwardedMessageNode);
+                ForwardedMessage = new Message(forwardedMessageNode["message"], forwardedTimestamp);
+            }
         }
 
         /// <summary>
@@ -264,7 +276,7 @@ namespace Sharp.Xmpp.Im
         {
             // The 'type' attribute of message-stanzas is optional and if absent
             // a type of 'normal' is assumed.
-            if (String.IsNullOrEmpty(value))
+            if (string.IsNullOrEmpty(value))
                 return MessageType.Normal;
             return (MessageType)Enum.Parse(typeof(MessageType),
                 value.Capitalize());
@@ -281,7 +293,7 @@ namespace Sharp.Xmpp.Im
             foreach (XmlElement e in element.GetElementsByTagName(tag))
             {
                 string k = e.GetAttribute("xml:lang");
-                if (String.IsNullOrEmpty(k))
+                if (string.IsNullOrEmpty(k))
                     return e;
             }
             return null;

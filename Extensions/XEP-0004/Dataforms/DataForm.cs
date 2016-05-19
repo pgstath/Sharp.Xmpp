@@ -9,6 +9,8 @@ namespace Sharp.Xmpp.Extensions.Dataforms
     /// </summary>
     public abstract class DataForm
     {
+		private const string xmlns = "jabber:x:data";
+		
         /// <summary>
         /// The fields contained in the data-form.
         /// </summary>
@@ -141,7 +143,7 @@ namespace Sharp.Xmpp.Extensions.Dataforms
         internal DataForm(string title = null, string instructions = null,
             bool readOnly = false, params DataField[] fields)
         {
-            element = Xml.Element("x", "jabber:x:data");
+            element = Xml.Element("x", xmlns);
             Title = title;
             Instructions = instructions;
             this.fields = new FieldList(element, readOnly);
@@ -215,6 +217,88 @@ namespace Sharp.Xmpp.Extensions.Dataforms
                 throw new XmlException("The 'type' attribute of the underlying " +
                     "XML element is invalid.", e);
             }
+        }
+		
+		        /// <summary>
+        /// Add a boolean value to this form
+        /// </summary>
+        /// <param name="name">The name of the value</param>
+        /// <param name="value">The value to add</param>
+        /// <returns>This data form</returns>
+        public DataForm AddValue(string name, bool value)
+        {
+            element.Child(new BooleanField(name, value).ToXmlElement());
+
+            return this;
+        }
+
+        /// <summary>
+        /// Add a Jid value to this form
+        /// </summary>
+        /// <param name="name">The name of the value</param>
+        /// <param name="value">The value to add</param>
+        /// <returns>This data form</returns>
+        public DataForm AddValue(string name, Jid value)
+        {
+            value.ThrowIfNull();
+
+            element.Child(new JidField(name, value).ToXmlElement());
+
+            return this;
+        }
+
+        /// <summary>
+        /// Add a text value to this form
+        /// </summary>
+        /// <param name="name">The name of the value</param>
+        /// <param name="value">The value to add</param>
+        /// <returns>This data form</returns>
+        public DataForm AddValue(string name, string value)
+        {
+            value.ThrowIfNull();
+
+            element.Child(new TextField(name, value).ToXmlElement());
+
+            return this;
+        }
+
+        /// <summary>
+        /// Add an untyped value to this form
+        /// </summary>
+        /// <param name="name">The name of the value</param>
+        /// <param name="value">The value to add</param>
+        /// <returns>This data form</returns>
+        public DataForm AddUntypedValue(string name, object value)
+        {
+            var valueNode = Xml.Element("value", xmlns);
+            if (value != null)
+            {
+                valueNode.Text(value.ToString());
+            }
+
+            element.Child(Xml.Element("field", xmlns).Attr("var", name).Child(valueNode));
+
+            return this;
+        }
+
+        /// <summary>
+        /// Add a typed value to this form
+        /// </summary>
+        /// <param name="name">The name of the value</param>
+        /// <param name="type">The type of the value to add</param>
+        /// <param name="value">The value to add</param>
+        /// <returns>This data form</returns>
+        public DataForm AddValue(string name, DataFieldType type, object value)
+        {
+            var valueNode = Xml.Element("value", xmlns);
+            if (value != null)
+            {
+                valueNode.Text(value.ToString());
+            }
+
+            element.Child(Xml.Element("field", xmlns).Attr("var", name).Attr("type", type.ToString()).Child(valueNode));
+
+            return this;
         }
     }
 }
