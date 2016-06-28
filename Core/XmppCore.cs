@@ -478,8 +478,14 @@ namespace Sharp.Xmpp.Core
                 // We are connected.
                 Connected = true;
                 // Set up the listener and dispatcher tasks.
-                Task.Factory.StartNew(ReadXmlStream, TaskCreationOptions.LongRunning);
-                Task.Factory.StartNew(DispatchEvents, TaskCreationOptions.LongRunning);
+                var longRunningFactory = new TaskFactory(
+                    CancellationToken.None, 
+                    TaskCreationOptions.DenyChildAttach | TaskCreationOptions.LongRunning, 
+                    TaskContinuationOptions.None, 
+                    TaskScheduler.Default
+                );
+                longRunningFactory.StartNew(ReadXmlStream, TaskCreationOptions.LongRunning);
+                longRunningFactory.StartNew(DispatchEvents, TaskCreationOptions.LongRunning);
             }
             catch (XmlException e)
             {
@@ -1316,7 +1322,7 @@ namespace Sharp.Xmpp.Core
                 ev.Set();
             // Call the callback if it's an asynchronous call.
             else if (iqCallbacks.TryRemove(id, out cb))
-                Task.Factory.StartNew(() => { cb(id, iq); });
+                Task.Run(() => { cb(id, iq); });
         }
 
         /// <summary>

@@ -227,7 +227,7 @@ namespace Sharp.Xmpp.Extensions
             // Try to establish a SOCKS5 connection with one of the streamhosts.
             // Spawn off another task for this, so that we don't block the
             // dispatcher thread.
-            Task.Factory.StartNew(() =>
+            Task.Run(() =>
             {
                 using (var client = EstablishConnection(stanza, sid, hosts))
                 {
@@ -789,7 +789,7 @@ namespace Sharp.Xmpp.Extensions
             // Waiting for a client connection is a blocking call and we need to
             // negotiate the SOCKS5 connection after we send the IQ request but
             // _before_ we wait for the IQ response.
-            Task.Factory.StartNew(() =>
+            Task.Run(() =>
             {
                 try
                 {
