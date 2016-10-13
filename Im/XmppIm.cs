@@ -714,7 +714,7 @@ namespace Sharp.Xmpp.Im {
 			foreach (string group in item.Groups)
 				xml.Child(Xml.Element("group").Text(group));
 			var query = Xml.Element("query", "jabber:iq:roster").Child(xml);
-			Iq iq = IqRequest(IqType.Set, null, Jid, query);
+			Iq iq = IqRequest(IqType.Set, item.Jid, Jid, query);
 			if (iq.Type == IqType.Error)
 				throw Util.ExceptionFromError(iq, "The item could not be added to the roster.");
 		}
