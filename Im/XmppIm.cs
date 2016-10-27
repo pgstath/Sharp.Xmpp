@@ -299,11 +299,36 @@ namespace Sharp.Xmpp.Im
         /// <exception cref="ArgumentOutOfRangeException">The value of the port parameter
         /// is not a valid port number.</exception>
         public XmppIm(string hostname, string username, string password,
-            int port = 5222, bool tls = true, RemoteCertificateValidationCallback validate = null)
-        {
-            core = new XmppCore(hostname, username, password, port, tls, validate);
-            SetupEventHandlers();
-        }
+            int port = 5222, bool tls = true, RemoteCertificateValidationCallback validate = null) :
+		this (hostname, username, password, null, port, tls, validate)
+        { }
+
+		/// <summary>
+		/// Initializes a new instance of the XmppIm.
+		/// </summary>
+		/// <param name="hostname">The hostname of the XMPP server to connect to.</param>
+		/// <param name="username">The username with which to authenticate. In XMPP jargon
+		/// this is known as the 'node' part of the JID.</param>
+		/// <param name="password">The password with which to authenticate.</param>
+		/// <param name="server">The IP address or domain of the XMPP server, if different from the hostname eg. xmpp.server.com</param>
+		/// <param name="port">The port number of the XMPP service of the server.</param>
+		/// <param name="tls">If true the session will be TLS/SSL-encrypted if the server
+		/// supports TLS/SSL-encryption.</param>
+		/// <param name="validate">A delegate used for verifying the remote Secure Sockets
+		/// Layer (SSL) certificate which is used for authentication. Can be null if not
+		/// needed.</param>
+		/// <exception cref="ArgumentNullException">The hostname parameter or the
+		/// username parameter or the password parameter is null.</exception>
+		/// <exception cref="ArgumentException">The hostname parameter or the username
+		/// parameter is the empty string.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">The value of the port parameter
+		/// is not a valid port number.</exception>
+		public XmppIm(string hostname, string username, string password, string server,
+			int port = 5222, bool tls = true, RemoteCertificateValidationCallback validate = null)
+		{
+			core = new XmppCore(hostname, username, password, server, port, tls, validate);
+			SetupEventHandlers();
+		}
 
         /// <summary>
         /// Initializes a new instance of the XmppIm.
@@ -322,11 +347,36 @@ namespace Sharp.Xmpp.Im
         /// <exception cref="ArgumentOutOfRangeException">The value of the port parameter
         /// is not a valid port number.</exception>
         public XmppIm(string hostname, int port = 5222, bool tls = true,
-            RemoteCertificateValidationCallback validate = null)
+            RemoteCertificateValidationCallback validate = null) :
+		this (hostname, null, port , tls, validate)
         {
             core = new XmppCore(hostname, port, tls, validate);
             SetupEventHandlers();
         }
+
+		/// <summary>
+		/// Initializes a new instance of the XmppIm.
+		/// </summary>
+		/// <param name="hostname">The hostname of the XMPP server to connect to.</param>
+		/// <param name="server">The IP address or domain of the XMPP server, if different from the hostname eg. xmpp.server.com</param>
+		/// <param name="port">The port number of the XMPP service of the server.</param>
+		/// <param name="tls">If true the session will be TLS/SSL-encrypted if the server
+		/// supports TLS/SSL-encryption.</param>
+		/// <param name="validate">A delegate used for verifying the remote Secure Sockets
+		/// Layer (SSL) certificate which is used for authentication. Can be null if not
+		/// needed.</param>
+		/// <exception cref="ArgumentNullException">The hostname parameter is
+		/// null.</exception>
+		/// <exception cref="ArgumentException">The hostname parameter is the empty
+		/// string.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">The value of the port parameter
+		/// is not a valid port number.</exception>
+		public XmppIm(string hostname, string server, int port = 5222, bool tls = true,
+			RemoteCertificateValidationCallback validate = null)
+		{
+			core = new XmppCore(hostname, server, port, tls, validate);
+			SetupEventHandlers();
+		}
 
         /// <summary>
         /// Establishes a connection to the XMPP server.
