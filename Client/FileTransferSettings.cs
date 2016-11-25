@@ -8,7 +8,7 @@ namespace Sharp.Xmpp.Client
     /// <summary>
     /// Contains settings for configuring various file-transfer options.
     /// </summary>
-    public class FileTransferSettings
+    public class FileTransferSettings : IFileTransferSettings
     {
         /// <summary>
         /// A reference to the Socks5Bytestreams extension.

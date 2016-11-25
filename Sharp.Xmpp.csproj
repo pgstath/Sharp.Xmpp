@@ -70,6 +70,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Client\FileTransferSettings.cs" />
+    <Compile Include="Client\IFileTransferSettings.cs" />
+    <Compile Include="Client\IXmppClient.cs" />
     <Compile Include="Client\XmppClient.cs" />
     <Compile Include="Core\ErrorEventArgs.cs" />
     <Compile Include="Extensions\CustomExtension\CustomIqExtension.cs" />
@@ -162,6 +164,7 @@
     <Compile Include="Extensions\XEP-0096\FileTransferProgressEventArgs.cs" />
     <Compile Include="Extensions\XEP-0096\FileTransferRequest.cs" />
     <Compile Include="Extensions\XEP-0096\IDataStream.cs" />
+    <Compile Include="Extensions\XEP-0096\IFileTransfer.cs" />
     <Compile Include="Extensions\XEP-0096\SIFileTransfer.cs" />
     <Compile Include="Extensions\XEP-0096\SISession.cs" />
     <Compile Include="Extensions\XEP-0096\TransferAbortedEventArgs.cs" />
@@ -181,6 +184,10 @@
     <Compile Include="Extensions\XEP-0231\BobData.cs" />
     <Compile Include="Extensions\XEP-0279\ServerIpCheck.cs" />
     <Compile Include="Extensions\XEP-0280\MessageCarbons.cs" />
+    <Compile Include="Im\IMessage.cs" />
+    <Compile Include="Im\IRoster.cs" />
+    <Compile Include="Im\IRosterItem.cs" />
+    <Compile Include="Im\IXmppIm.cs" />
     <Compile Include="Im\SubscriptionRequest.cs" />
     <Compile Include="XmppDisconnectionException.cs" />
     <Compile Include="XmppExceptions.cs" />

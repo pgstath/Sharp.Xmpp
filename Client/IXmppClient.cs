@@ -8,6 +8,7 @@ using System.Net.Security;
 
 namespace Sharp.Xmpp.Client
 {
+
     /// <summary>
     /// Implements an XMPP client providing basic instant messaging (IM) and
     /// presence functionality as well as various XMPP extension functionality.
@@ -17,717 +18,165 @@ namespace Sharp.Xmpp.Client
     /// simplifies some of the more complicated aspects such as privacy lists and
     /// roster management. It also implements various XMPP protocol extensions.
     /// </remarks>
-    public class XmppClient : IXmppClient
+    public interface IXmppClient : IDisposable
     {
-        /// <summary>
-        /// True if the instance has been disposed of.
-        /// </summary>
-        private bool disposed;
-
-        /// <summary>
-        /// The instance of the XmppIm class used for implementing the basic messaging
-        /// and presence functionality.
-        /// </summary>
-        private XmppIm im;
-
-        /// <summary>
-        /// Provides access to the 'Software Version' XMPP extension functionality.
-        /// </summary>
-        private SoftwareVersion version;
-
-        /// <summary>
-        /// Provides access to the 'Service Discovery' XMPP extension functionality.
-        /// </summary>
-        private ServiceDiscovery sdisco;
-
-        /// <summary>
-        /// Provides access to the 'Entity Capabilities' XMPP extension functionality.
-        /// </summary>
-        private EntityCapabilities ecapa;
-
-        /// <summary>
-        /// Provides access to the 'Ping' XMPP extension functionality.
-        /// </summary>
-        private Ping ping;
-
-        /// <summary>
-        /// Provides access to the 'Custom Iq Extension' functionality
-        /// </summary>
-        private CustomIqExtension cusiqextension;
-
-        /// <summary>
-        /// Provides access to the 'Attention' XMPP extension functionality.
-        /// </summary>
-        private Attention attention;
-
-        /// <summary>
-        /// Provides access to the 'Entity Time' XMPP extension functionality.
-        /// </summary>
-        private EntityTime time;
-
-        /// <summary>
-        /// Provides access to the 'Blocking Command' XMPP extension functionality.
-        /// </summary>
-        private BlockingCommand block;
-
-        /// <summary>
-        /// Provides access to the 'Personal Eventing Protocol' extension.
-        /// </summary>
-        private Pep pep;
-
-        /// <summary>
-        /// Provides access to the 'User Tune' XMPP extension functionality.
-        /// </summary>
-        private UserTune userTune;
-
-        /// <summary>
-        /// Provides access to the "Multi-User Chat" XMPP extension functionality.
-        /// </summary>
-        private MultiUserChat groupChat;
-
-#if WINDOWSPLATFORM
-		/// <summary>
-		/// Provides access to the 'User Avatar' XMPP extension functionality.
-		/// </summary>
-		UserAvatar userAvatar;
-#endif
-
-        /// <summary>
-        /// Provides access to the 'User Mood' XMPP extension functionality.
-        /// </summary>
-        private UserMood userMood;
-
-        /// <summary>
-        /// Provides access to the 'Data Forms' XMPP extension functionality.
-        /// </summary>
-        private DataForms dataForms;
-
-        /// <summary>
-        /// Provides access to the 'Feature Negotiation' XMPP extension.
-        /// </summary>
-        private FeatureNegotiation featureNegotiation;
-
-        /// <summary>
-        /// Provides access to the 'Stream Initiation' XMPP extension.
-        /// </summary>
-        private StreamInitiation streamInitiation;
-
-        /// <summary>
-        /// Provides access to the 'SI File Transfer' XMPP extension.
-        /// </summary>
-        private SIFileTransfer siFileTransfer;
-
-        /// <summary>
-        /// Provides access to the 'In-Band Bytestreams' XMPP extension.
-        /// </summary>
-        private InBandBytestreams inBandBytestreams;
-
-        /// <summary>
-        /// Provides access to the 'User Activity' XMPP extension.
-        /// </summary>
-        private UserActivity userActivity;
-
-        /// <summary>
-        /// Provides access to the 'Socks5 Bytestreams' XMPP extension.
-        /// </summary>
-        private Socks5Bytestreams socks5Bytestreams;
-
-        /// <summary>
-        /// Provides access to the 'Server IP Check' XMPP extension.
-        /// </summary>
-        private ServerIpCheck serverIpCheck;
-
-        /// <summary>
-        /// Provides access to the 'In-Band Registration' XMPP extension.
-        /// </summary>
-        private InBandRegistration inBandRegistration;
-
-        /// <summary>
-        /// Provides access to the 'Chat State Nofitications' XMPP extension.
-        /// </summary>
-        private ChatStateNotifications chatStateNotifications;
-
-        /// <summary>
-        /// Provides access to the 'Bits of Binary' XMPP extension.
-        /// </summary>
-        private BitsOfBinary bitsOfBinary;
-
-        /// <summary>
-        /// Provides vcard Based Avatar functionality
-        /// </summary>
-        private VCardAvatars vcardAvatars;
-
-        /// <summary>
-        /// Provides the Message Carbons extension
-        /// </summary>
-        private MessageCarbons messageCarbons;
-
         /// <summary>
         /// The hostname of the XMPP server to connect to.
         /// </summary>
-        public string Hostname
-        {
-            get
-            {
-                return im.Hostname;
-            }
-
-            set
-            {
-                im.Hostname = value;
-            }
-        }
+        string Hostname { get; set; }
 
         /// <summary>
         /// The port number of the XMPP service of the server.
         /// </summary>
-        public int Port
-        {
-            get
-            {
-                return im.Port;
-            }
-
-            set
-            {
-                im.Port = value;
-            }
-        }
+        int Port { get; set; }
 
         /// <summary>
         /// The username with which to authenticate. In XMPP jargon this is known
         /// as the 'node' part of the JID.
         /// </summary>
-        public string Username
-        {
-            get
-            {
-                return im.Username;
-            }
-
-            set
-            {
-                im.Username = value;
-            }
-        }
+        string Username { get; set; }
 
         /// <summary>
         /// The password with which to authenticate.
         /// </summary>
-        public string Password
-        {
-            get
-            {
-                return im.Password;
-            }
-
-            set
-            {
-                im.Password = value;
-            }
-        }
+        string Password { get; set; }
 
         /// <summary>
         /// If true the session will be TLS/SSL-encrypted if the server supports it.
         /// </summary>
-        public bool Tls
-        {
-            get
-            {
-                return im.Tls;
-            }
-
-            set
-            {
-                im.Tls = value;
-            }
-        }
+        bool Tls { get; set; }
 
         /// <summary>
         /// A delegate used for verifying the remote Secure Sockets Layer (SSL)
         /// certificate which is used for authentication.
         /// </summary>
-        public RemoteCertificateValidationCallback Validate
-        {
-            get
-            {
-                return im.Validate;
-            }
-
-            set
-            {
-                im.Validate = value;
-            }
-        }
+        RemoteCertificateValidationCallback Validate { get; set; }
 
         /// <summary>
         /// Determines whether the session with the server is TLS/SSL encrypted.
         /// </summary>
-        public bool IsEncrypted
-        {
-            get
-            {
-                return im.IsEncrypted;
-            }
-        }
+        bool IsEncrypted { get; }
 
         /// <summary>
         /// The address of the Xmpp entity.
         /// </summary>
-        public Jid Jid
-        {
-            get
-            {
-                return im.Jid;
-            }
-        }
+        Jid Jid { get; }
 
         /// <summary>
         /// Determines whether the instance is connected to the XMPP server.
         /// </summary>
-        public bool Connected
-        {
-            get
-            {
-                if (im != null)
-                {
-                    return im.Connected;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-        }
+        bool Connected { get; }
 
         /// <summary>
         /// Determines whether the instance has been authenticated.
         /// </summary>
-        public bool Authenticated
-        {
-            get
-            {
-                return im.Authenticated;
-            }
-        }
+        bool Authenticated { get; }
 
         /// <summary>
         /// The default IQ Set Time out in Milliseconds. -1 means no timeout
         /// </summary>
-        public int DefaultTimeOut
-        {
-            get { return im.DefaultTimeOut; }
-            set { im.DefaultTimeOut = value; }
-        }
+        int DefaultTimeOut { get; set; }
 
         /// <summary>
         /// If true prints XML stanzas
         /// </summary>
-        public bool DebugStanzas
-        {
-            get { return im.DebugStanzas; }
-            set { im.DebugStanzas = value; }
-        }
+        bool DebugStanzas { get; set; }
 
         /// <summary>
         /// Contains settings for configuring file-transfer options.
         /// </summary>
-        public IFileTransferSettings FileTransferSettings
-        {
-            get;
-            private set;
-        }
+        IFileTransferSettings FileTransferSettings { get; }
 
         /// <summary>
         /// The underlying XmppIm instance.
         /// </summary>
-        public IXmppIm Im
-        {
-            get
-            {
-                return im;
-            }
-        }
+        IXmppIm Im { get; }
 
         /// <summary>
         /// A callback method to invoke when a request for a subscription is received
         /// from another XMPP user.
         /// </summary>
         /// <include file='Examples.xml' path='S22/Xmpp/Client/XmppClient[@name="SubscriptionRequest"]/*'/>
-        public SubscriptionRequest SubscriptionRequest
-        {
-            get
-            {
-                return im.SubscriptionRequest;
-            }
-
-            set
-            {
-                im.SubscriptionRequest = value;
-            }
-        }
-
-        /// <summary>
-        /// A callback method to invoke when a request for voice is received
-        /// from another XMPP user.
-        /// </summary>
-        public RegistrationCallback VoiceRequestedInGroupChat
-        {
-            get
-            {
-                return groupChat.VoiceRequested;
-            }
-
-            set
-            {
-                groupChat.VoiceRequested = value;
-            }
-        }
+        SubscriptionRequest SubscriptionRequest { get; set; }
 
         /// <summary>
         /// The event that is raised when a status notification has been received.
         /// </summary>
-        public event EventHandler<StatusEventArgs> StatusChanged
-        {
-            add
-            {
-                im.Status += value;
-            }
-            remove
-            {
-                im.Status -= value;
-            }
-        }
+        event EventHandler<StatusEventArgs> StatusChanged;
 
         /// <summary>
         /// The event that is raised when a mood notification has been received.
         /// </summary>
-        public event EventHandler<MoodChangedEventArgs> MoodChanged
-        {
-            add
-            {
-                userMood.MoodChanged += value;
-            }
-            remove
-            {
-                userMood.MoodChanged -= value;
-            }
-        }
+        event EventHandler<MoodChangedEventArgs> MoodChanged;
 
         /// <summary>
         /// The event that is raised when an activity notification has been received.
         /// </summary>
-        public event EventHandler<ActivityChangedEventArgs> ActivityChanged
-        {
-            add
-            {
-                userActivity.ActivityChanged += value;
-            }
-            remove
-            {
-                userActivity.ActivityChanged -= value;
-            }
-        }
+        event EventHandler<ActivityChangedEventArgs> ActivityChanged;
 
 #if WINDOWSPLATFORM
 		/// <summary>
 		/// The event that is raised when a contact has updated his or her avatar.
 		/// </summary>
-		public event EventHandler<AvatarChangedEventArgs> AvatarChanged {
-			add {
-				userAvatar.AvatarChanged += value;
-			}
-			remove {
-				userAvatar.AvatarChanged -= value;
-			}
-		}
+		event EventHandler<AvatarChangedEventArgs> AvatarChanged { add; remove; }
 #endif
 
         /// <summary>
         /// The event that is raised when a contact has published tune information.
         /// </summary>
-        public event EventHandler<TuneEventArgs> Tune
-        {
-            add
-            {
-                userTune.Tune += value;
-            }
-            remove
-            {
-                userTune.Tune -= value;
-            }
-        }
+        event EventHandler<TuneEventArgs> Tune;
 
         /// <summary>
         /// The event that is raised when a chat message is received.
         /// </summary>
-        public event EventHandler<MessageEventArgs> Message
-        {
-            add
-            {
-                im.Message += value;
-            }
-            remove
-            {
-                im.Message -= value;
-            }
-        }
-
-        /// <summary>
-        /// The event that is raised when the subject is changed in a group chat.
-        /// </summary>
-        public event EventHandler<MessageEventArgs> GroupChatSubjectChanged
-        {
-            add
-            {
-                groupChat.SubjectChanged += value;
-            }
-            remove
-            {
-                groupChat.SubjectChanged -= value;
-            }
-        }
-
-        /// <summary>
-        /// The event that is raised when a participant's presence is changed in a group chat.
-        /// </summary>
-        public event EventHandler<GroupPresenceEventArgs> GroupPresenceChanged
-        {
-            add
-            {
-                groupChat.PrescenceChanged += value;
-            }
-            remove
-            {
-                groupChat.PrescenceChanged -= value;
-            }
-        }
-
-        /// <summary>
-        /// The event that is raised when an invite to a group chat is received.
-        /// </summary>
-        public event EventHandler<GroupInviteEventArgs> GroupInviteReceived
-        {
-            add
-            {
-                groupChat.InviteReceived += value;
-            }
-            remove
-            {
-                groupChat.InviteReceived -= value;
-            }
-        }
-
-        /// <summary>
-        /// The event that is raised when an invite to a group chat is declined.
-        /// </summary>
-        public event EventHandler<GroupInviteDeclinedEventArgs> GroupInviteDeclined
-        {
-            add
-            {
-                groupChat.InviteWasDeclined += value;
-            }
-            remove
-            {
-                groupChat.InviteWasDeclined -= value;
-            }
-        }
-
-        /// <summary>
-        /// The event that is raised when the server responds with an error in relation to a group chat.
-        /// </summary>
-        public event EventHandler<GroupErrorEventArgs> GroupMucError
-        {
-            add
-            {
-                groupChat.MucErrorResponse += value;
-            }
-            remove
-            {
-                groupChat.MucErrorResponse -= value;
-            }
-        }
+        event EventHandler<MessageEventArgs> Message;
 
         /// <summary>
         /// The event that is raised periodically for every file-transfer operation to
         /// inform subscribers of the progress of the operation.
         /// </summary>
-        public event EventHandler<FileTransferProgressEventArgs> FileTransferProgress
-        {
-            add
-            {
-                siFileTransfer.FileTransferProgress += value;
-            }
-            remove
-            {
-                siFileTransfer.FileTransferProgress -= value;
-            }
-        }
+        event EventHandler<FileTransferProgressEventArgs> FileTransferProgress;
 
         /// <summary>
         /// The event that is raised when an on-going file-transfer has been aborted
         /// prematurely, either due to cancellation or error.
         /// </summary>
-        public event EventHandler<FileTransferAbortedEventArgs> FileTransferAborted
-        {
-            add
-            {
-                siFileTransfer.FileTransferAborted += value;
-            }
-            remove
-            {
-                siFileTransfer.FileTransferAborted -= value;
-            }
-        }
+        event EventHandler<FileTransferAbortedEventArgs> FileTransferAborted;
 
         /// <summary>
         /// The event that is raised when the chat-state of an XMPP entity has
         /// changed.
         /// </summary>
-        public event EventHandler<ChatStateChangedEventArgs> ChatStateChanged
-        {
-            add
-            {
-                chatStateNotifications.ChatStateChanged += value;
-            }
-            remove
-            {
-                chatStateNotifications.ChatStateChanged -= value;
-            }
-        }
+        event EventHandler<ChatStateChangedEventArgs> ChatStateChanged;
 
         /// <summary>
         /// The event that is raised when the roster of the user has been updated,
         /// i.e. a contact has been added, removed or updated.
         /// </summary>
-        public event EventHandler<RosterUpdatedEventArgs> RosterUpdated
-        {
-            add
-            {
-                im.RosterUpdated += value;
-            }
-            remove
-            {
-                im.RosterUpdated -= value;
-            }
-        }
+        event EventHandler<RosterUpdatedEventArgs> RosterUpdated;
 
         /// <summary>
         /// The event that is raised when a user or resource has unsubscribed from
         /// receiving presence notifications of the JID associated with this instance.
         /// </summary>
-        public event EventHandler<UnsubscribedEventArgs> Unsubscribed
-        {
-            add
-            {
-                im.Unsubscribed += value;
-            }
-            remove
-            {
-                im.Unsubscribed -= value;
-            }
-        }
+        event EventHandler<UnsubscribedEventArgs> Unsubscribed;
 
         /// <summary>
         /// The event that is raised when a subscription request made by the JID
         /// associated with this instance has been approved.
         /// </summary>
-        public event EventHandler<SubscriptionApprovedEventArgs> SubscriptionApproved
-        {
-            add
-            {
-                im.SubscriptionApproved += value;
-            }
-            remove
-            {
-                im.SubscriptionApproved -= value;
-            }
-        }
+        event EventHandler<SubscriptionApprovedEventArgs> SubscriptionApproved;
 
         /// <summary>
         /// The event that is raised when a subscription request made by the JID
         /// associated with this instance has been refused.
         /// </summary>
-        public event EventHandler<SubscriptionRefusedEventArgs> SubscriptionRefused
-        {
-            add
-            {
-                im.SubscriptionRefused += value;
-            }
-            remove
-            {
-                im.SubscriptionRefused -= value;
-            }
-        }
+        event EventHandler<SubscriptionRefusedEventArgs> SubscriptionRefused;
 
         /// <summary>
         /// The event that is raised when an unrecoverable error condition occurs.
         /// </summary>
-        public event EventHandler<Im.ErrorEventArgs> Error
-        {
-            add
-            {
-                im.Error += value;
-            }
-            remove
-            {
-                im.Error -= value;
-            }
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the XmppClient class.
-        /// </summary>
-        /// <param name="hostname">The hostname of the XMPP server to connect to.</param>
-        /// <param name="username">The username with which to authenticate. In XMPP jargon
-        /// this is known as the 'node' part of the JID.</param>
-        /// <param name="password">The password with which to authenticate.</param>
-        /// <param name="port">The port number of the XMPP service of the server.</param>
-        /// <param name="tls">If true the session will be TLS/SSL-encrypted if the server
-        /// supports TLS/SSL-encryption.</param>
-        /// <param name="validate">A delegate used for verifying the remote Secure Sockets
-        /// Layer (SSL) certificate which is used for authentication. Can be null if not
-        /// needed.</param>
-        /// <exception cref="ArgumentNullException">The hostname parameter or the
-        /// username parameter or the password parameter is null.</exception>
-        /// <exception cref="ArgumentException">The hostname parameter or the username
-        /// parameter is the empty string.</exception>
-        /// <exception cref="ArgumentOutOfRangeException">The value of the port parameter
-        /// is not a valid port number.</exception>
-        /// <remarks>Use this constructor if you wish to connect to an XMPP server using
-        /// an existing set of user credentials.</remarks>
-        public XmppClient(string hostname, string username, string password,
-            int port = 5222, bool tls = true, RemoteCertificateValidationCallback validate = null)
-        {
-            im = new XmppIm(hostname, username, password, port, tls, validate);
-            // Initialize the various extension modules.
-            LoadExtensions();
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the XmppClient class.
-        /// </summary>
-        /// <param name="hostname">The hostname of the XMPP server to connect to.</param>
-        /// <param name="port">The port number of the XMPP service of the server.</param>
-        /// <param name="tls">If true the session will be TLS/SSL-encrypted if the server
-        /// supports TLS/SSL-encryption.</param>
-        /// <param name="validate">A delegate used for verifying the remote Secure Sockets
-        /// Layer (SSL) certificate which is used for authentication. Can be null if not
-        /// needed.</param>
-        /// <exception cref="ArgumentNullException">The hostname parameter is
-        /// null.</exception>
-        /// <exception cref="ArgumentException">The hostname parameter is the empty
-        /// string.</exception>
-        /// <exception cref="ArgumentOutOfRangeException">The value of the port parameter
-        /// is not a valid port number.</exception>
-        /// <remarks>Use this constructor if you wish to register an XMPP account using
-        /// the in-band account registration process supported by some servers.</remarks>
-        public XmppClient(string hostname, int port = 5222, bool tls = true,
-            RemoteCertificateValidationCallback validate = null)
-        {
-            im = new XmppIm(hostname, port, tls, validate);
-            LoadExtensions();
-        }
+        event EventHandler<Im.ErrorEventArgs> Error;
 
         /// <summary>
         /// Establishes a connection to the XMPP server.
@@ -747,10 +196,7 @@ namespace Sharp.Xmpp.Client
         /// <exception cref="XmppException">An XMPP error occurred while negotiating the
         /// XML stream with the server, or resource binding failed, or the initialization
         /// of an XMPP extension failed.</exception>
-        public void Connect(string resource = null)
-        {
-            im.Connect(resource);
-        }
+        void Connect(string resource = null);
 
         /// <summary>
         /// Authenticates with the XMPP server using the specified username and
@@ -761,7 +207,7 @@ namespace Sharp.Xmpp.Client
         /// <exception cref="ArgumentNullException">The username parameter or the
         /// password parameter is null.</exception>
         /// <exception cref="System.Security.Authentication.AuthenticationException">
-        /// An authentication error occured while trying to establish a secure connection,
+        /// An authentication error occurred while trying to establish a secure connection,
         /// or the provided credentials were rejected by the server, or the server requires
         /// TLS/SSL and the Tls property has been set to false.</exception>
         /// <exception cref="IOException">There was a failure while writing to or reading
@@ -772,10 +218,7 @@ namespace Sharp.Xmpp.Client
         /// <exception cref="XmppException">An XMPP error occurred while negotiating the
         /// XML stream with the server, or resource binding failed, or the initialization
         /// of an XMPP extension failed.</exception>
-        public void Authenticate(string username, string password)
-        {
-            im.Autenticate(username, password);
-        }
+        void Authenticate(string username, string password);
 
         /// <summary>
         /// Sends a chat message with the specified content to the specified JID.
@@ -800,15 +243,9 @@ namespace Sharp.Xmpp.Client
         /// <exception cref="ObjectDisposedException">The XmppClient object has been
         /// disposed.</exception>
         /// <include file='Examples.xml' path='S22/Xmpp/Client/XmppClient[@name="SendMessage-1"]/*'/>
-        public void SendMessage(Jid to, string body, string subject = null,
+        void SendMessage(Jid to, string body, string subject = null,
             string thread = null, MessageType type = MessageType.Normal,
-            CultureInfo language = null)
-        {
-            AssertValid();
-            to.ThrowIfNull("to");
-            body.ThrowIfNullOrEmpty("body");
-            im.SendMessage(to, body, subject, thread, type, language);
-        }
+            CultureInfo language = null);
 
         /// <summary>
         /// Sends a chat message with the specified content to the specified JID.
@@ -840,15 +277,9 @@ namespace Sharp.Xmpp.Client
         /// message content in several distinct languages.
         /// </remarks>
         /// <include file='Examples.xml' path='S22/Xmpp/Client/XmppClient[@name="SendMessage-2"]/*'/>
-        public void SendMessage(Jid to, IDictionary<string, string> bodies,
+        void SendMessage(Jid to, IDictionary<string, string> bodies,
             IDictionary<string, string> subjects = null, string thread = null,
-            MessageType type = MessageType.Normal, CultureInfo language = null)
-        {
-            AssertValid();
-            to.ThrowIfNull("to");
-            bodies.ThrowIfNull("bodies");
-            im.SendMessage(to, bodies, subjects, thread, type, language);
-        }
+            MessageType type = MessageType.Normal, CultureInfo language = null);
 
         /// <summary>
         /// Sends the specified chat message.
@@ -862,12 +293,7 @@ namespace Sharp.Xmpp.Client
         /// the XMPP server.</exception>
         /// <exception cref="ObjectDisposedException">The XmppClient object has been
         /// disposed.</exception>
-        public void SendMessage(IMessage message)
-        {
-            AssertValid();
-            message.ThrowIfNull("message");
-            im.SendMessage(message.ToMessage());
-        }
+        void SendMessage(IMessage message);
 
         /// <summary>
         /// Sets the availability status.
@@ -889,12 +315,8 @@ namespace Sharp.Xmpp.Client
         /// the XMPP server.</exception>
         /// <exception cref="ObjectDisposedException">The XmppClient object has been
         /// disposed.</exception>
-        public void SetStatus(Availability availability, string message = null,
-            sbyte priority = 0, CultureInfo language = null)
-        {
-            AssertValid();
-            im.SetStatus(availability, message, 0, language);
-        }
+        void SetStatus(Availability availability, string message = null,
+            sbyte priority = 0, CultureInfo language = null);
 
         /// <summary>
         /// Sets the availability status.
@@ -916,12 +338,8 @@ namespace Sharp.Xmpp.Client
         /// the XMPP server.</exception>
         /// <exception cref="ObjectDisposedException">The XmppClient object has been
         /// disposed.</exception>
-        public void SetStatus(Availability availability,
-            Dictionary<string, string> messages, sbyte priority = 0)
-        {
-            AssertValid();
-            im.SetStatus(availability, messages, priority);
-        }
+        void SetStatus(Availability availability,
+            Dictionary<string, string> messages, sbyte priority = 0);
 
         /// <summary>
         /// Sets the availability status.
@@ -937,12 +355,7 @@ namespace Sharp.Xmpp.Client
         /// the XMPP server.</exception>
         /// <exception cref="ObjectDisposedException">The XmppClient object has been
         /// disposed.</exception>
-        public void SetStatus(Status status)
-        {
-            AssertValid();
-            status.ThrowIfNull("status");
-            im.SetStatus(status);
-        }
+        void SetStatus(Status status);
 
         /// <summary>
         /// Retrieves the user's roster (contact list).
@@ -963,11 +376,7 @@ namespace Sharp.Xmpp.Client
         /// <exception cref="XmppException">The server returned invalid data or another
         /// unspecified XMPP error occurred.</exception>
         /// <include file='Examples.xml' path='S22/Xmpp/Client/XmppClient[@name="GetRoster"]/*'/>
-        public IRoster GetRoster()
-        {
-            AssertValid();
-            return im.GetRoster();
-        }
+        IRoster GetRoster();
 
         /// <summary>
         /// Adds the contact with the specified JID to the user's roster.
@@ -991,15 +400,7 @@ namespace Sharp.Xmpp.Client
         /// error condition.</exception>
         /// <exception cref="XmppException">The server returned invalid data or another
         /// unspecified XMPP error occurred.</exception>
-        public void AddContact(Jid jid, string name = null, params string[] groups)
-        {
-            AssertValid();
-            jid.ThrowIfNull("jid");
-            // Create a roster item for the new contact.
-            im.AddToRoster(new RosterItem(jid, name, groups));
-            // Request a subscription from the contact.
-            im.RequestSubscription(jid);
-        }
+        void AddContact(Jid jid, string name = null, params string[] groups);
 
         /// <summary>
         /// Removes the item with the specified JID from the user's roster.
@@ -1018,14 +419,7 @@ namespace Sharp.Xmpp.Client
         /// error condition.</exception>
         /// <exception cref="XmppException">The server returned invalid data or another
         /// unspecified XMPP error occurred.</exception>
-        public void RemoveContact(Jid jid)
-        {
-            AssertValid();
-            jid.ThrowIfNull("jid");
-            // This removes the contact from the user's roster AND also cancels any
-            // subscriptions.
-            im.RemoveFromRoster(jid);
-        }
+        void RemoveContact(Jid jid);
 
         /// <summary>
         /// Removes the specified item from the user's roster.
@@ -1044,12 +438,7 @@ namespace Sharp.Xmpp.Client
         /// error condition.</exception>
         /// <exception cref="XmppException">The server returned invalid data or another
         /// unspecified XMPP error occurred.</exception>
-        public void RemoveContact(IRosterItem item)
-        {
-            AssertValid();
-            item.ThrowIfNull("item");
-            im.RemoveFromRoster(item);
-        }
+        void RemoveContact(IRosterItem item);
 
 #if WINDOWSPLATFORM
         /// <summary>
@@ -1090,35 +479,14 @@ namespace Sharp.Xmpp.Client
         /// The following file types are supported:
         ///  BMP, GIF, JPEG, PNG and TIFF.
         /// </remarks>
-		public void SetAvatar(string filePath) {
-			AssertValid();
-			filePath.ThrowIfNull("filePath");
-			userAvatar.Publish(filePath);
-		}
+		void SetAvatar(string filePath);
 #endif
 
         /// <summary>
         /// Publishes the image located at the specified path as the user's avatar using vcard based Avatars
         /// </summary>
         /// <param name="filePath">The path to the image to publish as the user's avatar.</param>
-        public void SetvCardAvatar(string filePath)
-        {
-            AssertValid();
-            filePath.ThrowIfNull("filePath");
-
-            try
-            {
-                using (Stream s = File.OpenRead(filePath))
-                {
-                    vcardAvatars.SetAvatar(s);
-                }
-            }
-            catch (IOException copyError)
-            {
-                System.Diagnostics.Debug.WriteLine(copyError.Message);
-                //Fix??? Should throw a network exception
-            }
-        }
+        void SetvCardAvatar(string filePath);
 
         /// <summary>
         /// Get the vcard based Avatar of user with Jid
@@ -1126,26 +494,16 @@ namespace Sharp.Xmpp.Client
         /// <param name="jid">The string jid of the user</param>
         /// <param name="filepath">The filepath where the avatar will be stored</param>
         /// <param name="callback">The action that will be executed after the file has been downloaded</param>
-        public void GetvCardAvatar(string jid, string filepath, Action callback)
-        {
-            AssertValid();
-            vcardAvatars.RequestAvatar(new Jid(jid), filepath, callback);
-        }
+        void GetvCardAvatar(string jid, string filepath, Action callback);
 
         /// <summary>
-        /// Requests a Custom Iq from the XMPP entinty Jid
+        /// Requests a Custom Iq from the XMPP entity Jid
         /// </summary>
         /// <param name="jid">The XMPP entity to request the custom IQ</param>
         /// <param name="str">The payload string to provide to the Request</param>
         /// <param name="callback">The callback method to call after the Request Result has being received. Included the serialised dat
         /// of the answer to the request</param>
-        public void RequestCustomIq(Jid jid, string str, Action callback = null)
-        {
-            AssertValid();
-            if (callback == null) cusiqextension.RequestCustomIq(jid, str);
-            else
-                cusiqextension.RequestCustomIqAsync(jid, str, callback);
-        }
+        void RequestCustomIq(Jid jid, string str, Action callback = null);
 
         /// <summary>
         /// Sets the user's mood to the specified mood value.
@@ -1159,11 +517,7 @@ namespace Sharp.Xmpp.Client
         /// the XMPP server.</exception>
         /// <exception cref="ObjectDisposedException">The XmppClient object has been
         /// disposed.</exception>
-        public void SetMood(Mood mood, string description = null)
-        {
-            AssertValid();
-            userMood.SetMood(mood, description);
-        }
+        void SetMood(Mood mood, string description = null);
 
         /// <summary>
         /// Sets the user's activity to the specified activity value(s).
@@ -1180,12 +534,8 @@ namespace Sharp.Xmpp.Client
         /// <exception cref="ObjectDisposedException">The XmppClient object has been
         /// disposed.</exception>
         /// <include file='Examples.xml' path='S22/Xmpp/Client/XmppClient[@name="SetActivity"]/*'/>
-        public void SetActivity(GeneralActivity activity, SpecificActivity specific =
-            SpecificActivity.Other, string description = null)
-        {
-            AssertValid();
-            userActivity.SetActivity(activity, specific, description);
-        }
+        void SetActivity(GeneralActivity activity, SpecificActivity specific =
+            SpecificActivity.Other, string description = null);
 
         /// <summary>
         /// Publishes the specified music information to contacts on the user's
@@ -1217,12 +567,8 @@ namespace Sharp.Xmpp.Client
         /// disposed.</exception>
         /// <remarks>Publishing no information (i.e. calling Publish without any parameters
         /// is considered a "stop command" to disable publishing).</remarks>
-        public void SetTune(string title = null, string artist = null, string track = null,
-            int length = 0, int rating = 0, string source = null, string uri = null)
-        {
-            AssertValid();
-            userTune.Publish(title, artist, track, length, rating, source, uri);
-        }
+        void SetTune(string title = null, string artist = null, string track = null,
+            int length = 0, int rating = 0, string source = null, string uri = null);
 
         /// <summary>
         /// Publishes the specified music information to contacts on the user's
@@ -1244,45 +590,19 @@ namespace Sharp.Xmpp.Client
         /// <exception cref="ObjectDisposedException">The XmppClient object has been
         /// disposed.</exception>
         /// <include file='Examples.xml' path='S22/Xmpp/Client/XmppClient[@name="SetTune"]/*'/>
-        public void SetTune(TuneInformation tune)
-        {
-            AssertValid();
-            userTune.Publish(tune);
-        }
+        void SetTune(TuneInformation tune);
 
         /// <summary>
         /// A callback method to invoke when a request for a file-transfer is received
         /// from another XMPP user.
         /// </summary>
-        public FileTransferRequest FileTransferRequest
-        {
-            get
-            {
-                return siFileTransfer.TransferRequest;
-            }
-
-            set
-            {
-                siFileTransfer.TransferRequest = value;
-            }
-        }
+        FileTransferRequest FileTransferRequest { get; set; }
 
         /// <summary>
         /// A callback method to invoke when a Custom Iq Request is received
         /// from another XMPP user.
         /// </summary>
-        public CustomIqRequestDelegate CustomIqDelegate
-        {
-            get
-            {
-                return im.CustomIqDelegate;
-            }
-
-            set
-            {
-                im.CustomIqDelegate = value;
-            }
-        }
+        CustomIqRequestDelegate CustomIqDelegate { get; set; }
 
         /// <summary>
         /// Offers the specified file to the XMPP user with the specified JID and, if
@@ -1323,12 +643,8 @@ namespace Sharp.Xmpp.Client
         /// the XMPP server.</exception>
         /// <exception cref="ObjectDisposedException">The XmppClient object has been
         /// disposed.</exception>
-        public string InitiateFileTransfer(Jid to, string path,
-            string description = null, Action<bool, IFileTransfer> cb = null)
-        {
-            AssertValid();
-            return siFileTransfer.InitiateFileTransfer(to, path, description, cb);
-        }
+        string InitiateFileTransfer(Jid to, string path,
+            string description = null, Action<bool, IFileTransfer> cb = null);
 
         /// <summary>
         /// Offers the XMPP user with the specified JID the file with the specified
@@ -1363,12 +679,8 @@ namespace Sharp.Xmpp.Client
         /// the XMPP server.</exception>
         /// <exception cref="ObjectDisposedException">The XmppClient object has been
         /// disposed.</exception>
-        public string InitiateFileTransfer(Jid to, Stream stream, string name, long size,
-            string description = null, Action<bool, IFileTransfer> cb = null)
-        {
-            AssertValid();
-            return siFileTransfer.InitiateFileTransfer(to, stream, name, size, description, cb);
-        }
+        string InitiateFileTransfer(Jid to, Stream stream, string name, long size,
+            string description = null, Action<bool, IFileTransfer> cb = null);
 
         /// <summary>
         /// Cancels the specified file-transfer.
@@ -1383,12 +695,7 @@ namespace Sharp.Xmpp.Client
         /// the XMPP server.</exception>
         /// <exception cref="ObjectDisposedException">The XmppClient object has been
         /// disposed.</exception>
-        public void CancelFileTransfer(IFileTransfer transfer)
-        {
-            AssertValid();
-            transfer.ThrowIfNull("transfer");
-            siFileTransfer.CancelFileTransfer(transfer);
-        }
+        void CancelFileTransfer(IFileTransfer transfer);
 
         /// <summary>
         /// Cancels the specified file-transfer.
@@ -1405,19 +712,7 @@ namespace Sharp.Xmpp.Client
         /// the XMPP server.</exception>
         /// <exception cref="ObjectDisposedException">The XmppClient object has been
         /// disposed.</exception>
-        public void CancelFileTransfer(string sid, Jid from, Jid to)
-        {
-#if DEBUG
-            System.Diagnostics.Debug.WriteLine("XmppClient CancelFileTransfer, sid {0}, from {1}, to {2}", sid, from.ToString(), to.ToString());
-#endif
-
-            AssertValid();
-            sid.ThrowIfNullOrEmpty("sid");
-            from.ThrowIfNull("from");
-            to.ThrowIfNull("to");
-
-            siFileTransfer.CancelFileTransfer(sid, from, to);
-        }
+        void CancelFileTransfer(string sid, Jid from, Jid to);
 
         /// <summary>
         /// Initiates in-band registration with the XMPP server in order to register
@@ -1439,11 +734,7 @@ namespace Sharp.Xmpp.Client
         /// See the "Howto: Register an account" guide for a walkthrough on how to
         /// register an XMPP account through the in-band registration process.
         /// </remarks>
-        public void Register(RegistrationCallback callback)
-        {
-            callback.ThrowIfNull("callback");
-            inBandRegistration.Register(callback);
-        }
+        void Register(RegistrationCallback callback);
 
         /// <summary>
         /// Retrieves the current time of the XMPP client with the specified JID.
@@ -1467,11 +758,7 @@ namespace Sharp.Xmpp.Client
         /// condition.</exception>
         /// <exception cref="XmppException">The server returned invalid data or another
         /// unspecified XMPP error occurred.</exception>
-        public DateTime GetTime(Jid jid)
-        {
-            AssertValid();
-            return time.GetTime(jid);
-        }
+        DateTime GetTime(Jid jid);
 
         /// <summary>
         /// Retrieves the software version of the XMPP client with the specified JID.
@@ -1498,11 +785,7 @@ namespace Sharp.Xmpp.Client
         /// condition.</exception>
         /// <exception cref="XmppException">The server returned invalid data or another
         /// unspecified XMPP error occurred.</exception>
-        public VersionInformation GetVersion(Jid jid)
-        {
-            AssertValid();
-            return version.GetVersion(jid);
-        }
+        VersionInformation GetVersion(Jid jid);
 
         /// <summary>
         /// Returns an enumerable collection of XMPP features supported by the XMPP
@@ -1529,11 +812,7 @@ namespace Sharp.Xmpp.Client
         /// <exception cref="XmppException">The server returned invalid data or another
         /// unspecified XMPP error occurred.</exception>
         /// <include file='Examples.xml' path='S22/Xmpp/Client/XmppClient[@name="GetFeatures"]/*'/>
-        public IEnumerable<Extension> GetFeatures(Jid jid)
-        {
-            AssertValid();
-            return ecapa.GetExtensions(jid);
-        }
+        IEnumerable<Extension> GetFeatures(Jid jid);
 
         /// <summary>
         /// Buzzes the user with the specified JID in order to get his or her attention.
@@ -1556,11 +835,7 @@ namespace Sharp.Xmpp.Client
         /// condition.</exception>
         /// <exception cref="XmppException">The server returned invalid data or another
         /// unspecified XMPP error occurred.</exception>
-        public void Buzz(Jid jid, string message = null)
-        {
-            AssertValid();
-            attention.GetAttention(jid, message);
-        }
+        void Buzz(Jid jid, string message = null);
 
         /// <summary>
         /// Pings the user with the specified JID.
@@ -1584,11 +859,7 @@ namespace Sharp.Xmpp.Client
         /// condition.</exception>
         /// <exception cref="XmppException">The server returned invalid data or another
         /// unspecified XMPP error occurred.</exception>
-        public TimeSpan Ping(Jid jid)
-        {
-            AssertValid();
-            return ping.PingEntity(jid);
-        }
+        TimeSpan Ping(Jid jid);
 
         /// <summary>
         /// Blocks all communication to and from the XMPP entity with the specified JID.
@@ -1608,38 +879,7 @@ namespace Sharp.Xmpp.Client
         /// not connected to a remote host.</exception>
         /// <exception cref="ObjectDisposedException">The XmppClient object
         /// has been disposed.</exception>
-        public void Block(Jid jid)
-        {
-            AssertValid();
-            jid.ThrowIfNull("jid");
-            // If our server supports the 'Blocking Command' extension, we can just
-            // use that.
-            if (block.Supported)
-                block.Block(jid);
-            else
-            {
-                // Privacy list blocking. If our server doesn't support privacy lists, we're
-                // out of luck.
-                PrivacyList privacyList = null;
-                string name = im.GetDefaultPrivacyList();
-                if (name != null)
-                    privacyList = im.GetPrivacyList(name);
-                // If no default list has been set, look for a 'blocklist' list.
-                foreach (var list in im.GetPrivacyLists())
-                {
-                    if (list.Name == "blocklist")
-                        privacyList = list;
-                }
-                // If 'blocklist' doesn't exist, create it and set it as default.
-                if (privacyList == null)
-                    privacyList = new PrivacyList("blocklist");
-                privacyList.Add(new JidPrivacyRule(jid, false, 0), true);
-                // Save the privacy list and activate it.
-                im.EditPrivacyList(privacyList);
-                im.SetDefaultPrivacyList(privacyList.Name);
-                im.SetActivePrivacyList(privacyList.Name);
-            }
-        }
+        void Block(Jid jid);
 
         /// <summary>
         /// Unblocks all communication to and from the XMPP entity with the specified
@@ -1662,56 +902,7 @@ namespace Sharp.Xmpp.Client
         /// not connected to a remote host.</exception>
         /// <exception cref="ObjectDisposedException">The XmppClient object
         /// has been disposed.</exception>
-        public void Unblock(Jid jid)
-        {
-            AssertValid();
-            jid.ThrowIfNull("jid");
-            // If our server supports the 'Blocking Command' extension, we can just
-            // use that.
-            if (block.Supported)
-                block.Unblock(jid);
-            else
-            {
-                // Privacy list blocking. If our server doesn't support privacy lists, we're
-                // out of luck.
-                PrivacyList privacyList = null;
-                string name = im.GetDefaultPrivacyList();
-                if (name != null)
-                    privacyList = im.GetPrivacyList(name);
-                // If no default list has been set, look for a 'blocklist' list.
-                foreach (var list in im.GetPrivacyLists())
-                {
-                    if (list.Name == "blocklist")
-                        privacyList = list;
-                }
-                // No blocklist found.
-                if (privacyList == null)
-                    return;
-                ISet<JidPrivacyRule> set = new HashSet<JidPrivacyRule>();
-                foreach (var rule in privacyList)
-                {
-                    if (rule is JidPrivacyRule)
-                    {
-                        var jidRule = rule as JidPrivacyRule;
-                        if (jidRule.Jid == jid && jidRule.Allow == false)
-                            set.Add(jidRule);
-                    }
-                }
-                foreach (var rule in set)
-                    privacyList.Remove(rule);
-                // Save the privacy list and activate it.
-                if (privacyList.Count == 0)
-                {
-                    im.SetDefaultPrivacyList();
-                    im.RemovePrivacyList(privacyList.Name);
-                }
-                else
-                {
-                    im.EditPrivacyList(privacyList);
-                    im.SetDefaultPrivacyList(privacyList.Name);
-                }
-            }
-        }
+        void Unblock(Jid jid);
 
         /// <summary>
         /// Returns an enumerable collection of blocked contacts.
@@ -1730,209 +921,7 @@ namespace Sharp.Xmpp.Client
         /// not connected to a remote host.</exception>
         /// <exception cref="ObjectDisposedException">The XmppClient object
         /// has been disposed.</exception>
-        public IEnumerable<Jid> GetBlocklist()
-        {
-            AssertValid();
-            if (block.Supported)
-                return block.GetBlocklist();
-            PrivacyList privacyList = null;
-            string name = im.GetDefaultPrivacyList();
-            if (name != null)
-                privacyList = im.GetPrivacyList(name);
-            foreach (var list in im.GetPrivacyLists())
-            {
-                if (list.Name == "blocklist")
-                    privacyList = list;
-            }
-            var items = new HashSet<Jid>();
-            if (privacyList != null)
-            {
-                foreach (var rule in privacyList)
-                {
-                    if (rule is JidPrivacyRule)
-                        items.Add((rule as JidPrivacyRule).Jid);
-                }
-            }
-            return items;
-        }
-
-        /// <summary>
-        /// Returns a list of active public chat room messages.
-        /// </summary>
-        /// <param name="chatService">JID of the chat service (depends on server)</param>
-        /// <returns>List of Room JIDs</returns>
-        public IEnumerable<RoomInfoBasic> DiscoverRooms(Jid chatService)
-        {
-            AssertValid();
-            return groupChat.DiscoverRooms(chatService);
-        }
-
-
-        /// <summary>
-        /// Returns a list of active public chat room messages.
-        /// </summary>
-        /// <param name="chatRoom">Room Identifier</param>
-        /// <returns>Information about room</returns>
-        public RoomInfoExtended GetRoomInfo(Jid chatRoom)
-        {
-            AssertValid();
-            return groupChat.GetRoomInfo(chatRoom);
-        }
-
-        /// <summary>
-        /// Joins or creates new room using the specified room.
-        /// </summary>
-        /// <param name="chatRoom">Chat room</param>
-        /// <param name="nickname">Desired nickname</param>
-        /// <param name="password">(Optional) Password</param>
-        public void JoinRoom(Jid chatRoom, string nickname, string password = null)
-        {
-            AssertValid();
-            groupChat.JoinRoom(chatRoom, nickname, password);
-        }
-
-        /// <summary>
-        /// Leaves the specified room.
-        /// </summary>
-        public void LeaveRoom(Jid chatRoom, string nickname)
-        {
-            AssertValid();
-            groupChat.LeaveRoom(chatRoom, nickname);
-        }
-
-        /// <summary>
-        /// Sends a request to get X previous messages.
-        /// </summary>
-        /// <param name="option">How long to look back</param>
-        public void GetGroupChatLog(History option)
-        {
-            AssertValid();
-            groupChat.GetMessageLog(option);
-        }
-
-        /// <summary>
-        /// Requests a list of occupants within the specific room.
-        /// </summary>
-        public IEnumerable<Occupant> GetRoomAllOccupants(Jid chatRoom)
-        {
-            AssertValid();
-            return groupChat.GetMembers(chatRoom);
-        }
-
-        /// <summary>
-        /// Requests a list of non-members within the specified room.
-        /// </summary>
-        public IEnumerable<Occupant> GetRoomStrangers(Jid chatRoom)
-        {
-            AssertValid();
-            return groupChat.GetMembers(chatRoom, Affiliation.None);
-        }
-
-        /// <summary>
-        /// Requests a list of room members within the specified room.
-        /// </summary>
-        public IEnumerable<Occupant> GetRoomMembers(Jid chatRoom)
-        {
-            AssertValid();
-            return groupChat.GetMembers(chatRoom, Affiliation.Member);
-        }
-
-        /// <summary>
-        /// Requests a list of room owners within the specified room.
-        /// </summary>
-        public IEnumerable<Occupant> GetRoomOwners(Jid chatRoom)
-        {
-            AssertValid();
-            return groupChat.GetMembers(chatRoom, Affiliation.Owner);
-        }
-
-        /// <summary>
-        /// Requests a list of people banned within the specified room.
-        /// </summary>
-        public IEnumerable<Occupant> GetRoomBanList(Jid chatRoom)
-        {
-            AssertValid();
-            return groupChat.GetMembers(chatRoom, Affiliation.Outcast);
-        }
-
-        /// <summary>
-        /// Requests a list of visitors within the specified room.
-        /// </summary>
-        public IEnumerable<Occupant> GetRoomVisitors(Jid chatRoom)
-        {
-            AssertValid();
-            return groupChat.GetMembers(chatRoom, Role.Visitor);
-        }
-
-        /// <summary>
-        /// Requests a list of occupants with a voice privileges within the specified room.
-        /// </summary>
-        public IEnumerable<Occupant> GetRoomVoiceList(Jid chatRoom)
-        {
-            AssertValid();
-            return groupChat.GetMembers(chatRoom, Role.Participant);
-        }
-
-        /// <summary>
-        /// Requests a list of moderators within the specified room.
-        /// </summary>
-        public IEnumerable<Occupant> GetRoomModerators(Jid chatRoom)
-        {
-            AssertValid();
-            return groupChat.GetMembers(chatRoom, Role.Moderator);
-        }
-        
-        /// <summary>
-        /// Allows moderators to kick an occupant from the room.
-        /// </summary>
-        /// <param name="chatRoom">chat room</param>
-        /// <param name="nickname">user to kick</param>
-        /// <param name="reason">reason for kick</param>
-        public void KickGroupOccupant(Jid chatRoom, string nickname, string reason = null)
-        {
-            groupChat.KickOccupant(chatRoom, nickname, reason);
-        }
-
-        /// <summary>
-        /// Allows a user to modify the configuration of a specified room.
-        /// Only "Room Owners" may edit room config.
-        /// </summary>
-        /// <param name="room">JID of the room.</param>
-        /// <param name="callback">Room Configuration callback.</param>
-        public void ModifyRoomConfig(Jid room, RegistrationCallback callback)
-        {
-            groupChat.ModifyRoomConfig(room, callback);
-        }
-
-        /// <summary>
-        /// Asks the chat service to invite the specified user to the chat room you specify.
-        /// </summary>
-        /// <param name="to">user you intend to invite to chat room.</param>
-        /// <param name="message">message you want to send to the user.</param>
-        /// <param name="chatRoom">Jid of the chat room.</param>
-        /// <param name="password">Password if any.</param>
-        public void SendInvite(Jid to, Jid chatRoom, string message, string password = null)
-        {
-            groupChat.SendInvite(to, chatRoom, message, password);
-        }
-
-        /// <summary>
-        /// Responds to a group chat invitation with a decline message.
-        /// </summary>
-        /// <param name="invite">Original group chat invitation.</param>
-        /// <param name="reason">Reason for declining.</param>
-        public void DeclineInvite(Invite invite, string reason)
-        {
-            groupChat.DeclineInvite(invite, reason);
-        }
-
-        /// <summary>
-        /// Allows visitors to request membership to a room.
-        /// </summary>
-        public void RequestVoice(Jid chatRoom)
-        {
-            groupChat.RequestPrivilige(chatRoom, Role.Participant);
-        }
+        IEnumerable<Jid> GetBlocklist();
 
         /// <summary>
         /// Closes the connection with the XMPP server. This automatically disposes
@@ -1940,98 +929,7 @@ namespace Sharp.Xmpp.Client
         /// </summary>
         /// <exception cref="ObjectDisposedException">The XmppClient object has been
         /// disposed.</exception>
-        public void Close()
-        {
-            if (disposed)
-                throw new ObjectDisposedException(GetType().FullName);
-            Dispose();
-        }
+        void Close();
 
-        /// <summary>
-        /// Releases all resources used by the current instance of the XmppClient class.
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Releases all resources used by the current instance of the XmppClient
-        /// class, optionally disposing of managed resource.
-        /// </summary>
-        /// <param name="disposing">true to dispose of managed resources, otherwise
-        /// false.</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposed)
-            {
-                // Indicate that the instance has been disposed.
-                disposed = true;
-                // Get rid of managed resources.
-                if (disposing)
-                {
-                    if (im != null)
-                        im.Close();
-                    im = null;
-                }
-                // Get rid of unmanaged resources.
-            }
-        }
-
-        /// <summary>
-        /// Asserts the instance has not been disposed of and is connected to the
-        /// XMPP server.
-        /// </summary>
-        /// <exception cref="ObjectDisposedException">The XmppClient object has been
-        /// disposed.</exception>
-        /// <exception cref="InvalidOperationException">The XmppClient instance is not
-        /// connected to a remote host.</exception>
-        private void AssertValid()
-        {
-            if (disposed)
-                throw new ObjectDisposedException(GetType().FullName);
-            if (!Connected)
-                throw new InvalidOperationException("Not connected to XMPP server.");
-            if (!Authenticated)
-                throw new InvalidOperationException("Not authenticated with XMPP server.");
-        }
-
-        /// <summary>
-        /// Initializes the various XMPP extension modules.
-        /// </summary>
-        private void LoadExtensions()
-        {
-            version = im.LoadExtension<SoftwareVersion>();
-            sdisco = im.LoadExtension<ServiceDiscovery>();
-            ecapa = im.LoadExtension<EntityCapabilities>();
-            ping = im.LoadExtension<Ping>();
-            attention = im.LoadExtension<Attention>();
-            time = im.LoadExtension<EntityTime>();
-            block = im.LoadExtension<BlockingCommand>();
-            pep = im.LoadExtension<Pep>();
-            userTune = im.LoadExtension<UserTune>();
-#if WINDOWSPLATFORM
-			userAvatar = im.LoadExtension<UserAvatar>();
-#endif
-            userMood = im.LoadExtension<UserMood>();
-            dataForms = im.LoadExtension<DataForms>();
-            featureNegotiation = im.LoadExtension<FeatureNegotiation>();
-            streamInitiation = im.LoadExtension<StreamInitiation>();
-            siFileTransfer = im.LoadExtension<SIFileTransfer>();
-            inBandBytestreams = im.LoadExtension<InBandBytestreams>();
-            userActivity = im.LoadExtension<UserActivity>();
-            socks5Bytestreams = im.LoadExtension<Socks5Bytestreams>();
-            FileTransferSettings = new FileTransferSettings(socks5Bytestreams,
-                siFileTransfer);
-            serverIpCheck = im.LoadExtension<ServerIpCheck>();
-            messageCarbons = im.LoadExtension<MessageCarbons>();
-            inBandRegistration = im.LoadExtension<InBandRegistration>();
-            chatStateNotifications = im.LoadExtension<ChatStateNotifications>();
-            bitsOfBinary = im.LoadExtension<BitsOfBinary>();
-            vcardAvatars = im.LoadExtension<VCardAvatars>();
-            cusiqextension = im.LoadExtension<CustomIqExtension>();
-            groupChat = im.LoadExtension<MultiUserChat>();
-        }
     }
 }

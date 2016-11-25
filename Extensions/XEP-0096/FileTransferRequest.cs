@@ -7,5 +7,5 @@
     /// the file that is being offered.</param>
     /// <returns>The path where the file will be saved to or null to reject
     /// the file request.</returns>
-    public delegate string FileTransferRequest(FileTransfer transfer);
+    public delegate string FileTransferRequest(IFileTransfer transfer);
 }

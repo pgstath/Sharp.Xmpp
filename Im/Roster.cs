@@ -7,12 +7,12 @@ namespace Sharp.Xmpp.Im
     /// Represents the user's roster.
     /// </summary>
     /// <remarks>In XMPP jargon, the user's contact list is called a 'roster'.</remarks>
-    public class Roster : IEnumerable<RosterItem>
+    public class Roster : IEnumerable<IRosterItem>, IRoster
     {
         /// <summary>
         /// The set of items that form the roster.
         /// </summary>
-        private ISet<RosterItem> items = new HashSet<RosterItem>();
+        private ISet<IRosterItem> items = new HashSet<IRosterItem>();
 
         /// <summary>
         /// The number of items on the roster.
@@ -31,7 +31,7 @@ namespace Sharp.Xmpp.Im
         /// </summary>
         /// <returns>An enumerator that iterates through the collection of
         /// roster items.</returns>
-        public IEnumerator<RosterItem> GetEnumerator()
+        public IEnumerator<IRosterItem> GetEnumerator()
         {
             return items.GetEnumerator();
         }
@@ -52,11 +52,11 @@ namespace Sharp.Xmpp.Im
         /// </summary>
         /// <param name="items">An enumerable collection of items to add to the
         /// roster.</param>
-        internal Roster(IEnumerable<RosterItem> items = null)
+        internal Roster(IEnumerable<IRosterItem> items = null)
         {
             if (items != null)
             {
-                foreach (RosterItem s in items)
+                foreach (IRosterItem s in items)
                     this.items.Add(s);
             }
         }
@@ -67,7 +67,7 @@ namespace Sharp.Xmpp.Im
         /// <param name="item">The item to add.</param>
         /// <returns>True if the item was added to the collection of roster items;
         /// Otherwise false.</returns>
-        internal bool Add(RosterItem item)
+        internal bool Add(IRosterItem item)
         {
             return items.Add(item);
         }

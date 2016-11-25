@@ -7,7 +7,7 @@ namespace Sharp.Xmpp.Im
     /// Represents a roster item.
     /// </summary>
     /// <remarks>In XMPP jargon, the user's contact list is called a 'roster'.</remarks>
-    public class RosterItem
+    public class RosterItem : IRosterItem
     {
         /// <summary>
         /// The groups this roster item is part of.

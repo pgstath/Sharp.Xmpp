@@ -304,7 +304,7 @@ namespace Sharp.Xmpp.Extensions
         /// null.</exception>
         /// <exception cref="ArgumentException">The specified transfer instance does
         /// not represent an active data-transfer operation.</exception>
-        public void CancelFileTransfer(FileTransfer transfer)
+        public void CancelFileTransfer(IFileTransfer transfer)
         {
             transfer.ThrowIfNull("transfer");
             SISession session = GetSession(transfer.SessionId, transfer.From,

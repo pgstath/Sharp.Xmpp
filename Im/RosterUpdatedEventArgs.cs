@@ -10,7 +10,7 @@ namespace Sharp.Xmpp.Im
         /// <summary>
         /// The contact that has been added to the user's roster.
         /// </summary>
-        public RosterItem Item
+        public IRosterItem Item
         {
             get;
             private set;
@@ -34,7 +34,7 @@ namespace Sharp.Xmpp.Im
         /// <param name="removed">Set to true if the item is being removed from
         /// the roster.</param>
         /// <exception cref="ArgumentNullException">The item parameter is null.</exception>
-        public RosterUpdatedEventArgs(RosterItem item, bool removed)
+        public RosterUpdatedEventArgs(IRosterItem item, bool removed)
         {
             item.ThrowIfNull("item");
             Item = item;

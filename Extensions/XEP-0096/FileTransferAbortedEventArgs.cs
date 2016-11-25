@@ -12,7 +12,7 @@ namespace Sharp.Xmpp.Extensions
         /// Contains information about the file-transfer on whose behalf the
         /// event has been raised.
         /// </summary>
-        public FileTransfer Transfer
+        public IFileTransfer Transfer
         {
             get;
             private set;
@@ -25,7 +25,7 @@ namespace Sharp.Xmpp.Extensions
         /// operation for which the event is being raised.</param>
         /// <exception cref="ArgumentNullException">The transfer parameter is
         /// null.</exception>
-        internal FileTransferAbortedEventArgs(FileTransfer transfer)
+        internal FileTransferAbortedEventArgs(IFileTransfer transfer)
         {
             transfer.ThrowIfNull("transfer");
             Transfer = transfer;

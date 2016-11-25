@@ -9,7 +9,7 @@ namespace Sharp.Xmpp.Im
     /// <summary>
     /// Represents a Message stanza as defined in XMPP:IM.
     /// </summary>
-    public class Message : Core.Message
+    public class Message : Core.Message, IMessage
     {
         /// <summary>
         /// The type of the message stanza.
@@ -251,6 +251,15 @@ namespace Sharp.Xmpp.Im
             element = message.Data;
             AlternateSubjects = new XmlDictionary(element, "subject", "xml:lang");
             AlternateBodies = new XmlDictionary(element, "body", "xml:lang");
+        }
+
+        /// <summary>
+        /// Returns the instance as a Message.
+        /// </summary>
+        /// <returns>The message instance.</returns>
+        public Message ToMessage()
+        {
+            return this;
         }
 
         /// <summary>

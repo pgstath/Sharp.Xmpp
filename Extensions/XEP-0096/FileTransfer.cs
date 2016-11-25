@@ -6,7 +6,7 @@ namespace Sharp.Xmpp.Extensions
     /// Represents an on-going file-transfer operation.
     /// </summary>
     [Serializable]
-    public class FileTransfer
+    public class FileTransfer : IFileTransfer
     {
         /// <summary>
         /// The JID of the XMPP entity that is sending the file.

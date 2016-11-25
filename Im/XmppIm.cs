@@ -16,7 +16,7 @@ namespace Sharp.Xmpp.Im
     /// Implements the basic instant messaging (IM) and presence functionality.
     /// </summary>
     /// <remarks>For implementation details, refer to RFC 3921.</remarks>
-    public class XmppIm : IDisposable
+    public class XmppIm : IXmppIm
     {
         /// <summary>
         /// Provides access to the core facilities of XMPP.
@@ -334,7 +334,7 @@ namespace Sharp.Xmpp.Im
         /// <param name="resource">The resource identifier to bind with. If this is null,
         /// a resource identifier will be assigned by the server.</param>
         /// <returns>The user's roster (contact list).</returns>
-        /// <exception cref="AuthenticationException">An authentication error occured while
+        /// <exception cref="AuthenticationException">An authentication error occurred while
         /// trying to establish a secure connection, or the provided credentials were
         /// rejected by the server, or the server requires TLS/SSL and the Tls property has
         /// been set to false.</exception>
@@ -346,7 +346,7 @@ namespace Sharp.Xmpp.Im
         /// <exception cref="XmppException">An XMPP error occurred while negotiating the
         /// XML stream with the server, or resource binding failed, or the initialization
         /// of an XMPP extension failed.</exception>
-        public Roster Connect(string resource = null)
+        public IRoster Connect(string resource = null)
         {
             if (disposed)
                 throw new ObjectDisposedException(GetType().FullName);
@@ -365,13 +365,13 @@ namespace Sharp.Xmpp.Im
             try
             {
                 core.Connect(resource);
-                // If no username has been providd, don't establish a session.
+                // If no username has been provided, don't establish a session.
                 if (Username == null)
                     return null;
                 // Establish a session (Refer to RFC 3921, Section 3. Session Establishment).
                 EstablishSession();
                 // Retrieve user's roster as recommended (Refer to RFC 3921, Section 7.3).
-                Roster roster = GetRoster();
+                IRoster roster = this.GetRoster();
                 // Send initial presence.
                 SendPresence(new Presence());
                 return roster;
@@ -410,7 +410,7 @@ namespace Sharp.Xmpp.Im
             // Establish a session (Refer to RFC 3921, Section 3. Session Establishment).
             EstablishSession();
             // Retrieve user's roster as recommended (Refer to RFC 3921, Section 7.3).
-            Roster roster = GetRoster();
+            IRoster roster = this.GetRoster();
             // Send initial presence.
             SendPresence(new Presence());
         }
@@ -495,7 +495,7 @@ namespace Sharp.Xmpp.Im
         /// the XMPP server.</exception>
         /// <exception cref="ObjectDisposedException">The XmppIm object has been
         /// disposed.</exception>
-        public void SendMessage(Message message)
+        public void SendMessage(IMessage message)
         {
             AssertValid();
             message.ThrowIfNull("message");
@@ -506,9 +506,9 @@ namespace Sharp.Xmpp.Im
             {
                 var filter = ext as IOutputFilter<Message>;
                 if (filter != null)
-                    filter.Output(message);
+                    filter.Output(message.ToMessage());
             }
-            core.SendMessage(message);
+            core.SendMessage(message.ToMessage());
         }
 
         /// <summary>
@@ -536,7 +536,7 @@ namespace Sharp.Xmpp.Im
         /// <summary>
         /// Unsubscribes from the presence of the contact with the specified JID.
         /// </summary>
-        /// <param name="jid">The JID of the contact to unsubsribe from.</param>
+        /// <param name="jid">The JID of the contact to unsubscribe from.</param>
         /// <exception cref="ArgumentNullException">The jid parameter is null.</exception>
         /// <exception cref="IOException">There was a failure while writing to or reading
         /// from the network.</exception>
@@ -647,11 +647,11 @@ namespace Sharp.Xmpp.Im
             if (availability != Availability.Online)
             {
                 var states = new Dictionary<Availability, string>() {
-						{ Availability.Away, "away" },
-						{ Availability.Dnd, "dnd" },
-						{ Availability.Xa, "xa" },
-						{ Availability.Chat, "chat" }
-					};
+                        { Availability.Away, "away" },
+                        { Availability.Dnd, "dnd" },
+                        { Availability.Xa, "xa" },
+                        { Availability.Chat, "chat" }
+                    };
                 elems.Add(Xml.Element("show").Text(states[availability]));
             }
             if (priority != 0)
@@ -693,11 +693,11 @@ namespace Sharp.Xmpp.Im
             if (availability != Availability.Online)
             {
                 var states = new Dictionary<Availability, string>() {
-						{ Availability.Away, "away" },
-						{ Availability.Dnd, "dnd" },
-						{ Availability.Xa, "xa" },
-						{ Availability.Chat, "chat" }
-					};
+                        { Availability.Away, "away" },
+                        { Availability.Dnd, "dnd" },
+                        { Availability.Xa, "xa" },
+                        { Availability.Chat, "chat" }
+                    };
                 elems.Add(Xml.Element("show").Text(states[availability]));
             }
             if (priority != 0)
@@ -752,7 +752,7 @@ namespace Sharp.Xmpp.Im
         /// error condition.</exception>
         /// <exception cref="XmppException">The server returned invalid data or another
         /// unspecified XMPP error occurred.</exception>
-        public Roster GetRoster()
+        public IRoster GetRoster()
         {
             AssertValid();
             Iq iq = IqRequest(IqType.Get, null, Jid,
@@ -784,7 +784,7 @@ namespace Sharp.Xmpp.Im
         /// error condition.</exception>
         /// <exception cref="XmppException">The server returned invalid data or another
         /// unspecified XMPP error occurred.</exception>
-        public void AddToRoster(RosterItem item)
+        public void AddToRoster(IRosterItem item)
         {
             AssertValid();
             item.ThrowIfNull("item");
@@ -845,7 +845,7 @@ namespace Sharp.Xmpp.Im
         /// error condition.</exception>
         /// <exception cref="XmppException">The server returned invalid data or another
         /// unspecified XMPP error occurred.</exception>
-        public void RemoveFromRoster(RosterItem item)
+        public void RemoveFromRoster(IRosterItem item)
         {
             AssertValid();
             item.ThrowIfNull("item");
@@ -1767,11 +1767,11 @@ namespace Sharp.Xmpp.Im
         {
             Roster roster = new Roster();
             var states = new Dictionary<string, SubscriptionState>() {
-				{ "none", SubscriptionState.None },
-				{ "to", SubscriptionState.To },
-				{ "from", SubscriptionState.From },
-				{ "both", SubscriptionState.Both }
-			};
+                { "none", SubscriptionState.None },
+                { "to", SubscriptionState.To },
+                { "from", SubscriptionState.From },
+                { "both", SubscriptionState.Both }
+            };
             var items = query.GetElementsByTagName("item");
             foreach (XmlElement item in items)
             {
@@ -1802,11 +1802,11 @@ namespace Sharp.Xmpp.Im
         private void ProcessRosterIq(Iq iq)
         {
             var states = new Dictionary<string, SubscriptionState>() {
-				{ "none", SubscriptionState.None },
-				{ "to", SubscriptionState.To },
-				{ "from", SubscriptionState.From },
-				{ "both", SubscriptionState.Both }
-			};
+                { "none", SubscriptionState.None },
+                { "to", SubscriptionState.To },
+                { "from", SubscriptionState.From },
+                { "both", SubscriptionState.Both }
+            };
             // Ensure roster push is from a trusted source.
             bool trusted = iq.From == null || iq.From == Jid || iq.From
                 == Jid.GetBareJid();
@@ -1829,7 +1829,7 @@ namespace Sharp.Xmpp.Im
                     if (states.ContainsKey(s))
                         state = states[s];
                     string ask = item.GetAttribute("ask");
-                    RosterItem ri = new RosterItem(jid, name, state, ask == "subscribe", groups);
+                    IRosterItem ri = new RosterItem(jid, name, state, ask == "subscribe", groups);
                     RosterUpdated.Raise(this, new RosterUpdatedEventArgs(ri, s == "remove"));
                 }
                 // Acknowledge IQ request.
@@ -1866,11 +1866,11 @@ namespace Sharp.Xmpp.Im
             string type = item.GetAttribute("type");
             string value = item.GetAttribute("value");
             var states = new Dictionary<string, SubscriptionState>() {
-				{ "none", SubscriptionState.None },
-				{ "to", SubscriptionState.To },
-				{ "from", SubscriptionState.From },
-				{ "both", SubscriptionState.Both }
-			};
+                { "none", SubscriptionState.None },
+                { "to", SubscriptionState.To },
+                { "from", SubscriptionState.From },
+                { "both", SubscriptionState.Both }
+            };
             if (!String.IsNullOrEmpty(type))
             {
                 if (String.IsNullOrEmpty(value))
