@@ -402,7 +402,7 @@ namespace Sharp.Xmpp.Im
         /// <exception cref="XmppException">An XMPP error occurred while negotiating the
         /// XML stream with the server, or resource binding failed, or the initialization
         /// of an XMPP extension failed.</exception>
-        public void Autenticate(string username, string password)
+        public void Authenticate(string username, string password)
         {
             username.ThrowIfNull("username");
             password.ThrowIfNull("password");
@@ -413,6 +413,12 @@ namespace Sharp.Xmpp.Im
             Roster roster = GetRoster();
             // Send initial presence.
             SendPresence(new Presence());
+        }
+
+        [Obsolete("Use the appropriately-spelled 'Authenticate(string, string)' method instead.")]
+        public void Autenticate(string username, string password)
+        {
+            Authenticate(username, password);
         }
 
         /// <summary>
