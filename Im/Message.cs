@@ -235,6 +235,46 @@ namespace Sharp.Xmpp.Im
             Thread = thread;
         }
 
+		/// <summary>
+		/// Initializes a new instance of the Message class.
+		/// </summary>
+		/// <param name="to">The JID of the intended recipient.</param>
+		/// <param name="body">The content of the message.</param>
+		/// <param name="othertagname">The tag name the others items below will be wrapped in - they will have the appropriate namespace assigned.</param>
+		/// <param name="others">A dictionary of additional message elements after body. The dictionary
+		/// keys denote the namespace of the message bodies. The element name should be the same for all items but you can have multiple - 
+		/// each new element will have the namespace associated with it.</param>
+		/// <param name="subjects">A dictionary of message subjects. The dictionary
+		/// keys denote the languages of the message subjects and must be valid
+		/// ISO 2 letter language codes.</param>
+		/// <param name="thread">The conversation thread this message belongs to.</param>
+		/// <param name="type">The type of the message. Can be one of the values from
+		/// the MessagType enumeration.</param>
+		/// <param name="language">The language of the XML character data of
+		/// the stanza.</param>
+		/// <exception cref="ArgumentNullException">The to parametr or the bodies
+		/// parameter is null.</exception>
+		public Message(Jid to, String body, string othertagname, IDictionary<string, string> others,
+			IDictionary<string, string> subjects = null, string thread = null,
+			MessageType type = MessageType.Normal, CultureInfo language = null)
+			: base(to, null, null, null, language)
+		{
+			to.ThrowIfNull("to");
+			others.ThrowIfNull("bodies");
+			AlternateSubjects = new XmlDictionary(element, "subject", "xml:lang");
+            Body = body;
+			AlternateBodies = new XmlDictionary(element, othertagname, "xmlns");
+			Type = type;
+			foreach (var pair in others)
+				AlternateBodies.Add(pair.Key, pair.Value);
+			if (subjects != null)
+			{
+				foreach (var pair in subjects)
+					AlternateSubjects.Add(pair.Key, pair.Value);
+			}
+			Thread = thread;
+		}
+
         /// <summary>
         /// Initializes a new instance of the Message class from the specified
         /// instance.

@@ -81,16 +81,31 @@ namespace Sharp.Xmpp
         public static string ToXmlString(this XmlElement e, bool xmlDeclaration = false,
             bool leaveOpen = false)
         {
+            // avoid duplicate namespaces on elements by storing each in the list
+            System.Collections.Generic.IList<string> ns = new System.Collections.Generic.List<string>();
+
             // Can't use e.OuterXml because it "messes up" namespaces for elements with
             // a prefix, i.e. stream:stream (What it does is probably correct, but just
             // not what we need for XMPP).
             StringBuilder b = new StringBuilder("<" + e.Name);
-            if (!String.IsNullOrEmpty(e.NamespaceURI))
+            if (!String.IsNullOrEmpty(e.NamespaceURI)))
                 b.Append(" xmlns='" + e.NamespaceURI + "'");
             foreach (XmlAttribute a in e.Attributes)
             {
+                // 21 April 2017 - Removed skipping the namespaces so we can add custom namespaces.
+                //if (a.Name == "xmlns")
+                //    continue;
                 if (a.Name == "xmlns")
-                    continue;
+                {
+                    // If the namespace above was added to it, we don't want to add a duplicate. Causes of building Xml through strings.
+                    if (!String.IsNullOrEmpty(e.NamespaceURI)) continue;
+
+                    if (ns.Contains(a.Value))
+                            continue;
+                        else
+                            ns.Add(a.Value);
+                }
+
                 if (a.Value != null)
                     b.Append(" " + a.Name + "='" + SecurityElement.Escape(a.Value.ToString())
                         + "'");
