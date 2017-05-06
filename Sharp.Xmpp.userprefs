@@ -1,36 +1,18 @@
-﻿<Properties GitUserInfo="UsingGIT">
-  <MonoDevelop.Ide.Workbench ActiveDocument="Core/Stanza.cs">
+﻿<Properties StartupConfiguration="{170B8AF1-5FA4-4925-8BC1-519CF5D5AB11}|Default" GitUserInfo="UsingGIT">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Sharp.Xmpp Status">
     <Files>
-      <File FileName="Im/Message.cs" Line="12" Column="35" />
-      <File FileName="Client/XmppClient.cs" Line="918" Column="23" />
-      <File FileName="Im/XmppIm.cs" Line="548" Column="21" />
-      <File FileName="Core/XmppCore.cs" Line="649" Column="9" />
-      <File FileName="Core/Presence.cs" Line="22" Column="55" />
-      <File FileName="Xml.cs" Line="85" Column="45" />
-      <File FileName="Im/XmlDictionary.cs" Line="11" Column="20" />
-      <File FileName="Core/Stanza.cs" Line="11" Column="27" />
-      <File FileName="Core/Message.cs" Line="10" Column="30" />
+      <File FileName="../SharpXmppTest/Program.cs" Line="57" Column="10" />
+      <File FileName="Core/XmppCore.cs" Line="1540" Column="1" />
+      <File FileName="Sharp.Xmpp Status" />
     </Files>
-    <Pads>
-      <Pad Id="ProjectPad">
-        <State name="__root__">
-          <Node name="Sharp.Xmpp" expanded="True">
-            <Node name="Sharp.Xmpp" expanded="True">
-              <Node name="Client" expanded="True" />
-              <Node name="Core" expanded="True">
-                <Node name="Stanza.cs" selected="True" />
-              </Node>
-              <Node name="Im" expanded="True" />
-            </Node>
-          </Node>
-        </State>
-      </Pad>
-    </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
-    <BreakpointStore />
+    <BreakpointStore>
+      <Breakpoint file="/Users/livz/dev/code/libs/Sharp.Xmpp/Core/XmppCore.cs" relfile="Core/XmppCore.cs" line="1540" column="1" />
+    </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />
   <MultiItemStartupConfigurations />
+  <MonoDevelop.Ide.ItemProperties.SharpXmppTest PreferredExecutionTarget="MonoDevelop.Default" />
 </Properties>

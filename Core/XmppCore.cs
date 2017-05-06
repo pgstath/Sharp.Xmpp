@@ -550,7 +550,7 @@ namespace Sharp.Xmpp.Core
         /// disposed.</exception>
         /// <remarks>If a username has been supplied, this method automatically performs
         /// authentication.</remarks>
-        public void Connect(string resource = null)
+        public void Connect(string resource = null, bool bind = true)
         {
             if (disposed)
                 throw new ObjectDisposedException(GetType().FullName);
@@ -560,7 +560,7 @@ namespace Sharp.Xmpp.Core
                 client = new TcpClient(Server, Port);
                 stream = client.GetStream();
                 // Sets up the connection which includes TLS and possibly SASL negotiation.
-                SetupConnection(this.resource);
+                SetupConnection(this.resource, bind);
                 // We are connected.
                 Connected = true;
                 // Set up the listener and dispatcher tasks.
@@ -989,6 +989,7 @@ namespace Sharp.Xmpp.Core
         /// </summary>
         /// <param name="resource">The resource identifier to bind with. If this is null,
         /// it is assigned by the server.</param>
+        /// <param name="bind">Do we bind - this is false in Stream Resumption but usually true.</param>
         /// <exception cref="XmppException">The resource binding process failed.</exception>
         /// <exception cref="XmlException">Invalid or unexpected XML data has been
         /// received from the XMPP server.</exception>
@@ -996,7 +997,7 @@ namespace Sharp.Xmpp.Core
         /// trying to establish a secure connection, or the provided credentials were
         /// rejected by the server, or the server requires TLS/SSL and TLS has been
         /// turned off.</exception>
-        private void SetupConnection(string resource = null)
+        private void SetupConnection(string resource = null, bool bind = true)
         {
             // Request the initial stream.
             XmlElement feats = InitiateStream(Hostname);
@@ -1029,7 +1030,7 @@ namespace Sharp.Xmpp.Core
                 feats = Authenticate(list, Username, Password, Hostname);
                 // FIXME: How is the client's JID constructed if the server does not support
                 // resource binding?
-                if (feats["bind"] != null)
+                if (bind && feats["bind"] != null)
                     Jid = BindResource(resource);
             }
             catch (SaslException e)
@@ -1308,7 +1309,7 @@ namespace Sharp.Xmpp.Core
             {
                 while (true)
                 {
-                    XmlElement elem = parser.NextElement("iq", "message", "presence");
+                    XmlElement elem = parser.NextElement("iq", "message", "presence", "enabled", "resumed");
                     // Parse element and dispatch.
                     switch (elem.Name)
                     {
@@ -1327,6 +1328,16 @@ namespace Sharp.Xmpp.Core
                         case "presence":
                             stanzaQueue.Add(new Presence(elem));
                             break;
+
+                        // xep 1098 ###
+
+						case "enabled":
+                            HandleStreamManagementEnabledResponse(elem);
+							break;
+
+						case "resumed":
+                            HandleResumedStreamResponse(elem);
+							break;
                     }
                 }
             }
@@ -1350,6 +1361,294 @@ namespace Sharp.Xmpp.Core
                     Error.Raise(this, new ErrorEventArgs(e));
             }
         }
+
+		#region xep-0198 ###
+
+		/// <summary>
+		/// The event that is raised when stream management is enabled.
+		/// </summary>
+		public event EventHandler<EventArgs> StreamManagementEnabled;
+
+		/// <summary>
+		/// The event that is raised when a stream is resumed.
+		/// </summary>
+		public event EventHandler<EventArgs> StreamResumed;
+
+        /// <summary>
+        /// Is stream management enabled.
+        /// </summary>
+        private bool streamManagementEnabled = false;
+
+        /// <summary>
+        /// Is stream management resumption enabled.
+        /// </summary>
+        private bool resumptionEnabled = false;
+
+        /// <summary>
+        /// The resumption id that can be used if the stream drops.
+        /// </summary>
+        private string resumptionId = null;
+
+        /// <summary>
+        /// The maximum time between a connection being dropped and being allowed to reconnect the stream.
+        /// The server can choose to override what is set here.
+        /// </summary>
+        private int maxResumptionPeriodInSeconds = 30;
+
+        /// <summary>
+        /// The maximum number of times we can try to resume a broken connection
+        /// </summary>
+        private const int MAX_RESUMPTION_ATTEMPTS = 3;
+
+		/// <summary>
+		/// The maximum number of times we can try to create a broken stream
+		/// </summary>
+		private const int MAX_STREAM_ATTEMPTS = 3;
+
+        /// <summary>
+        /// The current resumption attempt downward counter
+        /// </summary>
+        private int currentResumptionAttempt = 0;
+
+		/// <summary>
+		/// The current stream attempt downward counter
+		/// </summary>
+		private int currentStreamAttempt = 0;
+
+		/// <summary>
+		/// The last time any kind of confirmation was asked of the server.
+        /// Acknowledgements, Resumption and so on. DO NOT KNOW IF I NEED THIS??
+		/// </summary>
+		private DateTime lastConfirmationAttemptServerTime = DateTime.MinValue;
+
+        /// <summary>
+        /// The last sequence number we have that was confirmed by the server
+        /// </summary>
+        private int lastConfirmedServerSequence = 0;
+
+        /// <summary>
+        /// When the server confirmed the above sequence number.
+        /// </summary>
+        private DateTime lastConfirmedServerTime = DateTime.MinValue;
+
+        /// <summary>
+        /// The maximum time without any kind of confirmation from the server.
+        /// </summary>
+        private int maxTimeBetweenConfirmationsInSeconds = 13;
+
+        /// <summary>
+        /// The namespace for stream management.
+        /// </summary>
+        const string STREAM_MANAGEMENT_NS = "urn:xmpp:sm:3";
+
+        /// <summary>
+        /// Enables stream management. You should listen for the StreamManagementEnabled event
+        /// to know when it is ready.
+        /// <param name="withresumption">Whether we should enabled resumption on the stream.</param>
+        /// <param name="maxTimeout">The max timeout client request - the server can override this.</param>
+        /// </summary>
+        public void EnableStreamManagement(bool withresumption = true, int maxTimeout = 60)
+        {
+            // Send <enable xmlns='urn:xmpp:sm:3'/>
+            XmlElement sm = Xml.Element("enable", STREAM_MANAGEMENT_NS);
+            sm.SetAttribute("resume", withresumption.ToString().ToLower());
+            sm.SetAttribute("max", maxTimeout.ToString());
+
+            // send to the server - a message will be sent back later
+            Send(sm);
+		}
+
+        /// <summary>
+        /// The callback when stream management is enabled.
+        /// </summary>
+        /// <param name="enabled">Enabled.</param>
+        private void HandleStreamManagementEnabledResponse(XmlElement enabled)
+        {
+			// reset other variables - usually these are set when there was a previous stream
+			isAttemptingNewStream = false;
+			lastAttemptAtNewStreamTime = null;
+			isAttemptingStreamResumption = false;
+			lastAttemptAtStreamResumptionTime = null;
+			lastConfirmedServerTime = DateTime.Now;
+            currentResumptionAttempt = 0;   //reset for next time
+            currentStreamAttempt = 0;
+
+			// we have stream management enabled so lets get started
+			streamManagementEnabled = true;
+            resumptionEnabled = Boolean.Parse(enabled.GetAttribute("resume"));
+            resumptionId = enabled.GetAttribute("id");
+            int.TryParse(enabled.GetAttribute("max"), out maxResumptionPeriodInSeconds);
+
+            // manage the stream uptime
+            CheckStreamCycle();
+
+            // throw an event to say we're ready with resumption
+            StreamManagementEnabled.Raise(this, null);
+        }
+
+        /// <summary>
+        /// A global so we know if we are in the process of trying to resume the stream
+        /// </summary>
+        private bool isAttemptingStreamResumption = false;
+
+        /// <summary>
+        /// A record of when the last attempt to resume the stream started - must reset it on success.
+        /// </summary>
+        private DateTime? lastAttemptAtStreamResumptionTime = null;
+
+        /// <summary>
+        /// The max time we will wait before we regard resumption is failed and lost.
+        /// </summary>
+        private int maxStreamResumptionTimeoutInSecond = 30;
+
+		/// <summary>
+		/// A global so we know if we are in the process of trying to create a new stream
+		/// </summary>
+		private bool isAttemptingNewStream = false;
+
+		/// <summary>
+		/// A record of when the last attempt to create a new stream - must reset it on success.
+		/// </summary>
+		private DateTime? lastAttemptAtNewStreamTime = null;
+
+		/// <summary>
+		/// The max time we will wait before we regard creating a new stream has failed.
+		/// </summary>
+		private int maxNewStreamTimeoutInSecond = 30;
+
+        /// <summary>
+        /// This will periodically check whether the server connection is up and 
+        /// if not it will kick of a process to try and resume it, or create a new stream.
+        /// </summary>
+        private void CheckStreamCycle()
+        {
+            int streamCycleCheckTimeInSeconds = 10;
+            System.Timers.Timer timer = new System.Timers.Timer();
+            timer.Interval = streamCycleCheckTimeInSeconds * 1000;
+            timer.Enabled = true;
+
+            // inside here we manage the stream uptime - AT THE MOMENT we assume one attempt at stream resumption and then one attempt at connecting
+            timer.Elapsed += (sender, e) => {
+
+                // if we are in the process of trying to create a new stream and that has been going on too long throw an error (for now)
+                if (isAttemptingNewStream
+                   && currentStreamAttempt > MAX_STREAM_ATTEMPTS
+                   && lastAttemptAtNewStreamTime.HasValue
+                   && DateTime.Now > lastAttemptAtNewStreamTime.Value.AddSeconds(maxNewStreamTimeoutInSecond))
+                {
+                    var connex = new XmppDisconnectionException("Unable to create a new connection in the time period.");
+                    Error.Raise(this, new ErrorEventArgs(connex));
+				}
+				else if (isAttemptingNewStream && currentStreamAttempt > MAX_STREAM_ATTEMPTS)  // we are in the process of creating so let it run
+					return;
+
+                // if we are in the process of trying to resume and that has been going on too long, consider it failed and restart the stream
+                if (isAttemptingStreamResumption
+                   && currentResumptionAttempt > MAX_RESUMPTION_ATTEMPTS
+                   && lastAttemptAtStreamResumptionTime.HasValue
+                   && DateTime.Now > lastAttemptAtStreamResumptionTime.Value.AddSeconds(maxStreamResumptionTimeoutInSecond))
+                {
+                    // full stream restart - we cannot use resumption in this case as it is a brand new stream
+                    isAttemptingNewStream = true;
+                    lastAttemptAtNewStreamTime = DateTime.Now;
+
+                    try
+                    {
+						// we will try getting the connection back again
+						currentStreamAttempt++;
+                                                
+                        // try to create a new connection
+                        Connect(this.resource);
+
+                        // finally, we enable stream management if it is on - IF WE DO THIS HERE
+                        // ARE THERE ANY RACE CONDITIONS BY RESETING THE VARIBLES ABOVE BEFORE THE RESPONSE ?
+                        if (streamManagementEnabled)
+                        {
+                            // we will reset the variables below when we get a stream management response
+                            EnableStreamManagement(resumptionEnabled, maxResumptionPeriodInSeconds);
+
+                        } else {
+                            
+							// if successful then reset
+							isAttemptingNewStream = false;
+							lastAttemptAtNewStreamTime = null;
+							isAttemptingStreamResumption = false;
+							lastAttemptAtStreamResumptionTime = null;
+							lastConfirmedServerTime = DateTime.Now;
+                            currentResumptionAttempt = 0;   //reset for next time
+                            currentStreamAttempt = 0;
+						}
+
+                        return;
+                    }
+                    catch {
+                        
+                        // a network error of some kind - timer will ensure a rerty is done shortly.
+                        return;
+                    }
+                }
+                else if (isAttemptingStreamResumption
+                         && currentResumptionAttempt > MAX_RESUMPTION_ATTEMPTS)  // we are in the process of resuming so let that run
+                    return;
+
+                // Normal path here - if we have had no response from the server at all in a given period despite an attempt we will try to resume the stream
+                if (DateTime.Now > lastConfirmedServerTime.AddSeconds(maxTimeBetweenConfirmationsInSeconds))
+                {
+                    // we will try getting the connection back again
+                    currentResumptionAttempt++;
+
+                    // try to resume the connection
+                    ResumeStream();
+                }
+            };
+
+            timer.Start();
+        }
+
+        /// <summary>
+        /// This will try to resume a stream, often caused by a dropped connection.
+        /// </summary>
+        private void ResumeStream()
+        {
+            // don't run multiple of these
+            if (isAttemptingStreamResumption) return;
+
+            // set these management vars
+            isAttemptingStreamResumption = true;
+            lastAttemptAtStreamResumptionTime = DateTime.Now;
+
+            // recreate the connection without binding
+            Connect(this.resource, false);
+
+			// Send <enable xmlns='urn:xmpp:sm:3'/>
+			XmlElement rs = Xml.Element("resume", STREAM_MANAGEMENT_NS);
+			rs.SetAttribute("h", lastConfirmedServerSequence.ToString());
+			rs.SetAttribute("previd", resumptionId);
+
+			// send to the server - a message will be sent back later
+			Send(rs);            
+        }
+
+		/// <summary>
+		/// The callback when stream is resumed.
+		/// </summary>
+		/// <param name="resumed">Resumed xml element.</param>
+		private void HandleResumedStreamResponse(XmlElement resumed)
+		{
+            // reset as we are now no longer trying to resume the stream
+            isAttemptingStreamResumption = false;
+            lastAttemptAtStreamResumptionTime = null;
+            currentResumptionAttempt = 0;   //reset for next time
+
+            // what is the last item the server is aware of and record at what point that is
+            lastConfirmedServerSequence = int.Parse(resumed.GetAttribute("h"));
+            lastConfirmedServerTime = DateTime.Now;
+
+			// throw an event to say we're ready with resumption
+			StreamResumed.Raise(this, null);
+		}
+
+        #endregion
 
         /// <summary>
         /// Continously removes stanzas from the FIFO of incoming stanzas and raises
