@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Xml;
 
-namespace Sharp.Xmpp.Im
+namespace XMPPEngineer.Im
 {
     /// <summary>
     /// An XML-backed dictionary.

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Xml;
 
-namespace Sharp.Xmpp.Extensions.Dataforms
+namespace XMPPEngineer.Extensions.Dataforms
 {
     /// <summary>
     /// Represents a field for gathering or providing a single line or word of

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace Sharp.Xmpp.Core.Sasl
+namespace XMPPEngineer.Core.Sasl
 {
     /// <summary>
     /// The exception is thrown when a Sasl-related error or unexpected condition occurs.

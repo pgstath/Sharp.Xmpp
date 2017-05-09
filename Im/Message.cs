@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Xml;
 
-namespace Sharp.Xmpp.Im
+namespace XMPPEngineer.Im
 {
     /// <summary>
     /// Represents a Message stanza as defined in XMPP:IM.

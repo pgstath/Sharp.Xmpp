@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Sharp.Xmpp.Extensions
+namespace XMPPEngineer.Extensions
 {
     /// <summary>
     /// The most basic form of a chat room

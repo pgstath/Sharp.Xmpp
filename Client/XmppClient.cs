@@ -1,12 +1,12 @@
-﻿using Sharp.Xmpp.Extensions;
-using Sharp.Xmpp.Im;
+﻿using XMPPEngineer.Extensions;
+using XMPPEngineer.Im;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Net.Security;
 
-namespace Sharp.Xmpp.Client
+namespace XMPPEngineer.Client
 {
     /// <summary>
     /// Implements an XMPP client providing basic instant messaging (IM) and

@@ -1,4 +1,4 @@
-﻿namespace Sharp.Xmpp.Extensions
+﻿namespace XMPPEngineer.Extensions
 {
     /// <summary>
     /// Defines possible values for the chat state of an XMPP user.

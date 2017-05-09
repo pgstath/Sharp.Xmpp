@@ -1,8 +1,8 @@
-﻿using Sharp.Xmpp.Extensions.Socks5;
+﻿using XMPPEngineer.Extensions.Socks5;
 using System;
 using System.Security.Cryptography;
 
-namespace Sharp.Xmpp.Extensions.Stun
+namespace XMPPEngineer.Extensions.Stun
 {
     /// <summary>
     /// Represents a STUN 'Binding Request' message.

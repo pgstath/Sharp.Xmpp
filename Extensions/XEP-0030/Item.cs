@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Sharp.Xmpp.Extensions
+namespace XMPPEngineer.Extensions
 {
     /// <summary>
     /// Represents an item of an XMPP entity as defined in XEP-0030.

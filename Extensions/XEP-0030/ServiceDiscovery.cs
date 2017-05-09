@@ -1,12 +1,12 @@
-﻿using Sharp.Xmpp.Core;
-using Sharp.Xmpp.Im;
+﻿using XMPPEngineer.Core;
+using XMPPEngineer.Im;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Xml;
 
-namespace Sharp.Xmpp.Extensions
+namespace XMPPEngineer.Extensions
 {
     /// <summary>
     /// Implements the 'Service Discovery' extension as defined in XEP-0030.

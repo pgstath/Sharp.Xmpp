@@ -1,6 +1,6 @@
-﻿using Sharp.Xmpp.Extensions.Dataforms;
+﻿using XMPPEngineer.Extensions.Dataforms;
 
-namespace Sharp.Xmpp.Extensions
+namespace XMPPEngineer.Extensions
 {
     /// <summary>
     /// A callback method which is invoked during the registration process to

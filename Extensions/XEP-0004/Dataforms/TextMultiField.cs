@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Xml;
 
-namespace Sharp.Xmpp.Extensions.Dataforms
+namespace XMPPEngineer.Extensions.Dataforms
 {
     /// <summary>
     /// Represents a field for gathering or providing multiple lines of text.

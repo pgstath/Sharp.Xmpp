@@ -4,12 +4,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Sharp.Xmpp")]
-[assembly: AssemblyDescription("Sharp.Xmpp is a multiplatform, Windows and Android, .NET XMPP client assembly. Sharp.Xmpp supports IM functionality and a variety of XMPP extensions, is simple and is extensively tested against Android Xamarin. It is a fork of the currently frozen excellent S22.Xmpp project.")]
+[assembly: AssemblyTitle("XMPPEngineer")]
+[assembly: AssemblyDescription("XMPPEngineer is a multiplatform, Windows and Android, .NET XMPP client assembly. XMPPEngineer supports IM functionality and a variety of XMPP extensions, is simple and is extensively tested against Android Xamarin. It is a fork of the currently frozen excellent S22.Xmpp project.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("PGStath")]
-[assembly: AssemblyProduct("Sharp.Xmpp")]
-[assembly: AssemblyCopyright("Sharp.Xmpp Panagiotis Georgiou Stathopoulos 2015, S22.Xmpp Torben Könke 2013")]
+[assembly: AssemblyProduct("XMPPEngineer")]
+[assembly: AssemblyCopyright("XMPPEngineer Panagiotis Georgiou Stathopoulos 2015, S22.Xmpp Torben Könke 2013")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

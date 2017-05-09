@@ -2,7 +2,7 @@
 using UPNPLib;
 #endif
 
-namespace Sharp.Xmpp.Extensions.Upnp
+namespace XMPPEngineer.Extensions.Upnp
 {
 #if WINDOWSPLATFORM
 

@@ -1,4 +1,4 @@
-﻿namespace Sharp.Xmpp.Extensions
+﻿namespace XMPPEngineer.Extensions
 {
     /// <summary>
     /// An enumeration of supported XMPP extensions.

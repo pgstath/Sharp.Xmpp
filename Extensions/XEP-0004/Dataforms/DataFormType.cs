@@ -1,4 +1,4 @@
-﻿namespace Sharp.Xmpp.Extensions.Dataforms
+﻿namespace XMPPEngineer.Extensions.Dataforms
 {
     /// <summary>
     /// Defines possible values for the different types of data-forms.

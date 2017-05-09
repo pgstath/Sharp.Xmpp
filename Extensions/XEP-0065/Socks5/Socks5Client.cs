@@ -5,7 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
-namespace Sharp.Xmpp.Extensions.Socks5
+namespace XMPPEngineer.Extensions.Socks5
 {
     /// <summary>
     /// Provides client connections for SOCKS5 network services.

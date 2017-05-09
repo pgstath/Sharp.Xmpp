@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Xml;
 
-namespace Sharp.Xmpp.Extensions.Dataforms
+namespace XMPPEngineer.Extensions.Dataforms
 {
     /// <summary>
     /// Represents a field that is intended for data description rather

@@ -1,4 +1,4 @@
-﻿namespace Sharp.Xmpp
+﻿namespace XMPPEngineer
 {
     /// <summary>
     /// Defines possible values for the condition of XMPP errors.

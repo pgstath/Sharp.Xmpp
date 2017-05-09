@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Xml;
 
-namespace Sharp.Xmpp.Extensions.Dataforms
+namespace XMPPEngineer.Extensions.Dataforms
 {
     /// <summary>
     /// Represents a list of data-fields contained in a data-form.

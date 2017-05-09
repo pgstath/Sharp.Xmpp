@@ -4,7 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.Serialization;
 
-namespace Sharp.Xmpp.Extensions.Stun
+namespace XMPPEngineer.Extensions.Stun
 {
     /// <summary>
     /// Implements a rudimentary STUN client for allowing an end host to discover

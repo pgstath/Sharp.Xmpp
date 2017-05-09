@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace Sharp.Xmpp.Extensions.Socks5
+namespace XMPPEngineer.Extensions.Socks5
 {
     /// <summary>
     /// A utility class modeled after the BCL StringBuilder to simplify

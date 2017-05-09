@@ -1,9 +1,9 @@
-﻿using Sharp.Xmpp.Core;
-using Sharp.Xmpp.Im;
+﻿using XMPPEngineer.Core;
+using XMPPEngineer.Im;
 using System;
 using System.Collections.Generic;
 
-namespace Sharp.Xmpp.Extensions
+namespace XMPPEngineer.Extensions
 {
     internal class MessageCarbons : XmppExtension
     {

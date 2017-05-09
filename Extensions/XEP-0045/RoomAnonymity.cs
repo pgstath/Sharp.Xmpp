@@ -1,4 +1,4 @@
-﻿namespace Sharp.Xmpp.Extensions
+﻿namespace XMPPEngineer.Extensions
 {
     /// <summary>
     /// Describes whether a conference room occupant's full JID is visible

@@ -1,10 +1,10 @@
-﻿using Sharp.Xmpp.Im;
+﻿using XMPPEngineer.Im;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Xml;
 
-namespace Sharp.Xmpp.Extensions
+namespace XMPPEngineer.Extensions
 {
     /// <summary>
     /// Implements the 'User Mood' extension as defined in XEP-0107.

@@ -1,9 +1,9 @@
-﻿using Sharp.Xmpp.Core;
-using Sharp.Xmpp.Im;
+﻿using XMPPEngineer.Core;
+using XMPPEngineer.Im;
 using System;
 using System.Collections.Generic;
 
-namespace Sharp.Xmpp.Extensions
+namespace XMPPEngineer.Extensions
 {
     /// <summary>
     /// Implements the 'Ping' extension as defined in XEP-0199.

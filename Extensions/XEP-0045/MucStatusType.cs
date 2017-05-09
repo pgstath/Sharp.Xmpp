@@ -1,5 +1,5 @@
 ﻿using System;
-namespace Sharp.Xmpp.Extensions
+namespace XMPPEngineer.Extensions
 {
     /// <summary>
     /// Defines an extensible format for status conditions in MUC.

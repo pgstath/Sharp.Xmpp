@@ -1,6 +1,6 @@
-### The MIT License
+﻿### The MIT License
 
-Sharp.Xmpp Copyright (c) 2015 Panos Georgiou Stath.
+XMPPEngineer Copyright (c) 2015 Panos Georgiou Stath.
 S22.Xmpp Copyright (c) 2013-2014 Torben Könke
 
 Permission is hereby granted, free of charge, to any person obtaining

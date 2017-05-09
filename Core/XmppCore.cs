@@ -1,5 +1,5 @@
 ﻿using ARSoft.Tools.Net.Dns;
-using Sharp.Xmpp.Core.Sasl;
+using XMPPEngineer.Core.Sasl;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -14,7 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace Sharp.Xmpp.Core
+namespace XMPPEngineer.Core
 {
     /// <summary>
     /// Implements the core features of the XMPP protocol.
@@ -1270,7 +1270,7 @@ namespace Sharp.Xmpp.Core
 
 			// we only want to cache specific stanzas if they are not being resent
 			if (addToCache &&
-                (stanza is Sharp.Xmpp.Core.Presence || stanza is Sharp.Xmpp.Core.Iq || stanza is Sharp.Xmpp.Core.Message))
+                (stanza is XMPPEngineer.Core.Presence || stanza is XMPPEngineer.Core.Iq || stanza is XMPPEngineer.Core.Message))
 			{
                 // cache until receipt is confirmed
                 stanzaQueueCache.Add(stanza);

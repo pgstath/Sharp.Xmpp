@@ -1,10 +1,10 @@
-﻿using Sharp.Xmpp.Core;
-using Sharp.Xmpp.Im;
+﻿using XMPPEngineer.Core;
+using XMPPEngineer.Im;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Sharp.Xmpp.Extensions
+namespace XMPPEngineer.Extensions
 {
     /// <summary>
     /// Implements the 'Software Version' extension as defined in XEP-0092.
@@ -134,7 +134,7 @@ namespace Sharp.Xmpp.Extensions
             Attribute attr = Assembly.GetExecutingAssembly().
                 GetCustomAttribute(typeof(AssemblyProductAttribute));
             string name = attr != null ? ((AssemblyProductAttribute)attr).Product :
-                "Sharp.Xmpp";
+                "XMPPEngineer";
             string version = Assembly.GetExecutingAssembly().GetName().
                 Version.ToString();
             Version = new VersionInformation(name, version,

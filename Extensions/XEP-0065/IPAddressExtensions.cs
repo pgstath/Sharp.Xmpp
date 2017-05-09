@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net;
 
-namespace Sharp.Xmpp.Extensions
+namespace XMPPEngineer.Extensions
 {
     /// <summary>
     /// Contains extension methods for the IPAddress class.

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Sharp.Xmpp.Im
+namespace XMPPEngineer.Im
 {
     /// <summary>
     /// Represents a privacy rule pertaining to a JID.

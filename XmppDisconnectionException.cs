@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace Sharp.Xmpp
+namespace XMPPEngineer
 {
     /// <summary>
     /// The exception that is thrown when a generic XMPP error condition has been encountered.

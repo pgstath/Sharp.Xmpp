@@ -1,4 +1,4 @@
-### Introduction
+﻿### Introduction
 
 This repository contains an easy-to-use and well-documented .NET assembly for communicating with
 an XMPP server. It supports basic Instant Messaging and Presence funtionality as well as a variety
@@ -63,13 +63,13 @@ guide, examples and details on using the classes and methods exposed by the S22.
 
 ### Credits
 
-The Sharp.Xmpp library is copyright © 2015 Panagiotis Georgiou Stathopoulos.
+The XMPPEngineer library is copyright © 2015 Panagiotis Georgiou Stathopoulos.
 The initial S22.Xmpp library is copyright © 2013-2014 Torben Könke.
 
 
 ### License
 
-This library is released under the [MIT license](https://github.com/pgstath/Sharp.Xmpp/blob/master/License.md).
+This library is released under the [MIT license](https://github.com/pgstath/XMPPEngineer/blob/master/License.md).
 
 
 ### Bug reports

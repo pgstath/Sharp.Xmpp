@@ -1,4 +1,4 @@
-﻿namespace Sharp.Xmpp.Im
+﻿namespace XMPPEngineer.Im
 {
     /// <summary>
     /// Defines the possible types for Message stanzas.

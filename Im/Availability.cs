@@ -1,4 +1,4 @@
-﻿namespace Sharp.Xmpp.Im
+﻿namespace XMPPEngineer.Im
 {
     /// <summary>
     /// Defines the possible values for a user's availability status.

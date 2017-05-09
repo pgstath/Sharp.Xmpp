@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Xml;
 
-namespace Sharp.Xmpp.Core
+namespace XMPPEngineer.Core
 {
     /// <summary>
     /// Represents a Message XML stanza.
