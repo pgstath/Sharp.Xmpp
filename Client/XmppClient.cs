@@ -879,37 +879,38 @@ namespace XMPPEngineer.Client
 			im.EnableStreamManagement(withresumption, maxTimeout);
 		}
 
-        /// <summary>
-        /// Sends a chat message with the specified content to the specified JID.
-        /// </summary>
-        /// <param name="to">The JID of the intended recipient.</param>
-        /// <param name="body">The content of the message.</param>
-        /// <param name="subject">The subject of the message.</param>
-        /// <param name="thread">The conversation thread the message belongs to.</param>
-        /// <param name="type">The type of the message. Can be one of the values from
-        /// the MessagType enumeration.</param>
-        /// <param name="language">The language of the XML character data of
-        /// the stanza.</param>
-        /// <exception cref="ArgumentNullException">The to parameter or the body parameter
-        /// is null.</exception>
-        /// <exception cref="ArgumentException">The body parameter is the empty
-        /// string.</exception>
-        /// <exception cref="IOException">There was a failure while writing to or reading
-        /// from the network.</exception>
-        /// <exception cref="InvalidOperationException">The XmppClient instance is not
-        /// connected to a remote host, or the XmppClient instance has not authenticated with
-        /// the XMPP server.</exception>
-        /// <exception cref="ObjectDisposedException">The XmppClient object has been
-        /// disposed.</exception>
-        /// <include file='Examples.xml' path='S22/Xmpp/Client/XmppClient[@name="SendMessage-1"]/*'/>
-        public void SendMessage(Jid to, string body, string subject = null,
-            string thread = null, MessageType type = MessageType.Normal,
+		/// <summary>
+		/// Sends a chat message with the specified content to the specified JID.
+		/// </summary>
+		/// <param name="to">The JID of the intended recipient.</param>
+		/// <param name="body">The content of the message.</param>
+		/// <param name="subject">The subject of the message.</param>
+		/// <param name="additionalAddresses">Any additional address to send to XEP-0033.</param>
+		/// <param name="thread">The conversation thread the message belongs to.</param>
+		/// <param name="type">The type of the message. Can be one of the values from
+		/// the MessagType enumeration.</param>
+		/// <param name="language">The language of the XML character data of
+		/// the stanza.</param>
+		/// <exception cref="ArgumentNullException">The to parameter or the body parameter
+		/// is null.</exception>
+		/// <exception cref="ArgumentException">The body parameter is the empty
+		/// string.</exception>
+		/// <exception cref="IOException">There was a failure while writing to or reading
+		/// from the network.</exception>
+		/// <exception cref="InvalidOperationException">The XmppClient instance is not
+		/// connected to a remote host, or the XmppClient instance has not authenticated with
+		/// the XMPP server.</exception>
+		/// <exception cref="ObjectDisposedException">The XmppClient object has been
+		/// disposed.</exception>
+		/// <include file='Examples.xml' path='S22/Xmpp/Client/XmppClient[@name="SendMessage-1"]/*'/>
+		public void SendMessage(Jid to, string body, string subject = null,
+            List<Jid> additionalAddresses = null, string thread = null, MessageType type = MessageType.Normal,
             CultureInfo language = null)
         {
             AssertValid();
             to.ThrowIfNull("to");
             body.ThrowIfNullOrEmpty("body");
-            im.SendMessage(to, body, subject, thread, type, language);
+            im.SendMessage(to, body, subject, additionalAddresses, thread, type, language);
         }
 
         /// <summary>
@@ -949,7 +950,7 @@ namespace XMPPEngineer.Client
             AssertValid();
             to.ThrowIfNull("to");
             bodies.ThrowIfNull("bodies");
-            im.SendMessage(to, bodies, subjects, thread, type, language);
+            im.SendMessage(to, bodies, subjects, thread, null, type, language);
         }
 
         /// <summary>

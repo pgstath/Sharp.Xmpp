@@ -527,13 +527,13 @@ namespace XMPPEngineer.Im
         /// <exception cref="ObjectDisposedException">The XmppIm object has been
         /// disposed.</exception>
         public void SendMessage(Jid to, string body, string subject = null,
-            string thread = null, MessageType type = MessageType.Normal,
+            List<Jid> additionalAddresses = null, string thread = null, MessageType type = MessageType.Normal,
             CultureInfo language = null)
         {
             AssertValid();
             to.ThrowIfNull("to");
             body.ThrowIfNullOrEmpty("body");
-            Message m = new Message(to, body, subject, thread, type, language);
+            Message m = new Message(to, body, subject, additionalAddresses, thread, type, language);
             SendMessage(m);
         }
 
@@ -578,12 +578,13 @@ namespace XMPPEngineer.Im
         /// disposed.</exception>
         public void SendMessage(Jid to, IDictionary<string, string> bodies,
             IDictionary<string, string> subjects = null, string thread = null,
+            List<Jid> additionalAddresses = null,
             MessageType type = MessageType.Normal, CultureInfo language = null)
         {
             AssertValid();
             to.ThrowIfNull("to");
             bodies.ThrowIfNull("bodies");
-            Message m = new Message(to, bodies, subjects, thread, type, language);
+            Message m = new Message(to, bodies, subjects, additionalAddresses, thread, type, language);
             SendMessage(m);
         }
 

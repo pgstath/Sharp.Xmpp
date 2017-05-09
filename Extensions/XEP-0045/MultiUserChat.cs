@@ -397,7 +397,7 @@ namespace XMPPEngineer.Extensions
         public void EditRoomSubject(Jid room, string subject)
         {
             subject.ThrowIfNull("subject");
-            Im.Message message = new Im.Message(room, null, subject, null, MessageType.Groupchat);
+            Im.Message message = new Im.Message(room, null, subject, null, null, MessageType.Groupchat);
             SendMessage(message);
         }
 
