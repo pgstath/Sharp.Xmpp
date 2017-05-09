@@ -1,15 +1,19 @@
 ﻿<Properties StartupConfiguration="{170B8AF1-5FA4-4925-8BC1-519CF5D5AB11}|Default" GitUserInfo="UsingGIT">
   <MonoDevelop.Ide.Workbench ActiveDocument="Sharp.Xmpp Status">
     <Files>
-      <File FileName="../SharpXmppTest/Program.cs" Line="57" Column="10" />
-      <File FileName="Core/XmppCore.cs" Line="1540" Column="1" />
+      <File FileName="../SharpXmppTest/Program.cs" Line="65" Column="70" />
       <File FileName="Sharp.Xmpp Status" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore>
-      <Breakpoint file="/Users/livz/dev/code/libs/Sharp.Xmpp/Core/XmppCore.cs" relfile="Core/XmppCore.cs" line="1540" column="1" />
+      <Breakpoint file="/Users/livz/dev/code/libs/Sharp.Xmpp/Core/XmppCore.cs" relfile="Core/XmppCore.cs" line="1643" column="1" />
+      <Breakpoint file="/Users/livz/dev/code/libs/Sharp.Xmpp/Core/XmppCore.cs" relfile="Core/XmppCore.cs" line="1674" column="1" />
+      <Breakpoint file="/Users/livz/dev/code/libs/Sharp.Xmpp/Core/XmppCore.cs" relfile="Core/XmppCore.cs" line="1655" column="1" />
+      <Breakpoint file="/Users/livz/dev/code/libs/Sharp.Xmpp/Core/XmppCore.cs" relfile="Core/XmppCore.cs" line="1589" column="1" />
+      <Breakpoint file="/Users/livz/dev/code/libs/Sharp.Xmpp/Core/XmppCore.cs" relfile="Core/XmppCore.cs" line="1565" column="1" />
+      <Breakpoint file="/Users/livz/dev/code/libs/Sharp.Xmpp/Core/XmppCore.cs" relfile="Core/XmppCore.cs" line="1369" column="1" />
     </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />

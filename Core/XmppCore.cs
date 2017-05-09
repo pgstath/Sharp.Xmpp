@@ -1263,11 +1263,22 @@ namespace Sharp.Xmpp.Core
         /// <exception cref="ArgumentNullException">The stanza parameter is null.</exception>
         /// <exception cref="IOException">There was a failure while writing to
         /// the network.</exception>
-        private void Send(Stanza stanza)
+        private void Send(Stanza stanza, bool addToCache = true)
         {
-            stanza.ThrowIfNull("stanza");
+			stanza.ThrowIfNull("stanza");
             Send(stanza.ToString());
-        }
+
+			// we only want to cache specific stanzas if they are not being resent
+			if (addToCache &&
+                (stanza is Sharp.Xmpp.Core.Presence || stanza is Sharp.Xmpp.Core.Iq || stanza is Sharp.Xmpp.Core.Message))
+			{
+                // cache until receipt is confirmed
+                stanzaQueueCache.Add(stanza);
+
+                // add one to the sequence
+                currentOutboundStanzaSequence++;
+			}
+		}
 
         /// <summary>
         /// Serializes and sends the specified XML element to the server and
@@ -1309,11 +1320,13 @@ namespace Sharp.Xmpp.Core
             {
                 while (true)
                 {
-                    XmlElement elem = parser.NextElement("iq", "message", "presence", "enabled", "resumed");
+                    XmlElement elem = parser.NextElement("iq", "message", "presence", "enabled", "resumed", "a", "r", "failed");
                     // Parse element and dispatch.
                     switch (elem.Name)
                     {
                         case "iq":
+                            currentInboundStanzaSequence++;
+
                             Iq iq = new Iq(elem);
                             if (iq.IsRequest)
                                 stanzaQueue.Add(iq);
@@ -1322,14 +1335,21 @@ namespace Sharp.Xmpp.Core
                             break;
 
                         case "message":
+                            currentInboundStanzaSequence++;
+
                             stanzaQueue.Add(new Message(elem));
                             break;
 
                         case "presence":
+                            currentInboundStanzaSequence++;
+
                             stanzaQueue.Add(new Presence(elem));
                             break;
 
-                        // xep 1098 ###
+						// xep 1098 ###
+						case "failed":
+							HandleStreamManagementFailedResponse(elem);
+							break;
 
 						case "enabled":
                             HandleStreamManagementEnabledResponse(elem);
@@ -1338,6 +1358,16 @@ namespace Sharp.Xmpp.Core
 						case "resumed":
                             HandleResumedStreamResponse(elem);
 							break;
+
+						case "a":
+                            currentInboundStanzaSequence++;
+							HandleAcknowledgementResponse(elem);
+							break;
+
+                        case "r":
+                            // we tell the server about the number of items we have received in this stream
+                            Send("<a h='" + currentInboundStanzaSequence.ToString() + "' xmlns='urn:xmpp:sm:3'/>");
+                            break;
                     }
                 }
             }
@@ -1390,6 +1420,11 @@ namespace Sharp.Xmpp.Core
         private string resumptionId = null;
 
         /// <summary>
+        /// The cycle that checks for items to process and timeouts.
+        /// </summary>
+        private int streamCycleCheckTimeInSeconds = 10;
+
+        /// <summary>
         /// The maximum time between a connection being dropped and being allowed to reconnect the stream.
         /// The server can choose to override what is set here.
         /// </summary>
@@ -1434,72 +1469,27 @@ namespace Sharp.Xmpp.Core
         /// <summary>
         /// The maximum time without any kind of confirmation from the server.
         /// </summary>
-        private int maxTimeBetweenConfirmationsInSeconds = 13;
+        private int maxTimeBetweenConfirmationsInSeconds = 60;
 
         /// <summary>
         /// The namespace for stream management.
         /// </summary>
         const string STREAM_MANAGEMENT_NS = "urn:xmpp:sm:3";
 
-        /// <summary>
-        /// Enables stream management. You should listen for the StreamManagementEnabled event
-        /// to know when it is ready.
-        /// <param name="withresumption">Whether we should enabled resumption on the stream.</param>
-        /// <param name="maxTimeout">The max timeout client request - the server can override this.</param>
-        /// </summary>
-        public void EnableStreamManagement(bool withresumption = true, int maxTimeout = 60)
-        {
-            // Send <enable xmlns='urn:xmpp:sm:3'/>
-            XmlElement sm = Xml.Element("enable", STREAM_MANAGEMENT_NS);
-            sm.SetAttribute("resume", withresumption.ToString().ToLower());
-            sm.SetAttribute("max", maxTimeout.ToString());
+		/// <summary>
+		/// A global so we know if we are in the process of trying to resume the stream
+		/// </summary>
+		private bool isAttemptingStreamResumption = false;
 
-            // send to the server - a message will be sent back later
-            Send(sm);
-		}
+		/// <summary>
+		/// A record of when the last attempt to resume the stream started - must reset it on success.
+		/// </summary>
+		private DateTime? lastAttemptAtStreamResumptionTime = null;
 
-        /// <summary>
-        /// The callback when stream management is enabled.
-        /// </summary>
-        /// <param name="enabled">Enabled.</param>
-        private void HandleStreamManagementEnabledResponse(XmlElement enabled)
-        {
-			// reset other variables - usually these are set when there was a previous stream
-			isAttemptingNewStream = false;
-			lastAttemptAtNewStreamTime = null;
-			isAttemptingStreamResumption = false;
-			lastAttemptAtStreamResumptionTime = null;
-			lastConfirmedServerTime = DateTime.Now;
-            currentResumptionAttempt = 0;   //reset for next time
-            currentStreamAttempt = 0;
-
-			// we have stream management enabled so lets get started
-			streamManagementEnabled = true;
-            resumptionEnabled = Boolean.Parse(enabled.GetAttribute("resume"));
-            resumptionId = enabled.GetAttribute("id");
-            int.TryParse(enabled.GetAttribute("max"), out maxResumptionPeriodInSeconds);
-
-            // manage the stream uptime
-            CheckStreamCycle();
-
-            // throw an event to say we're ready with resumption
-            StreamManagementEnabled.Raise(this, null);
-        }
-
-        /// <summary>
-        /// A global so we know if we are in the process of trying to resume the stream
-        /// </summary>
-        private bool isAttemptingStreamResumption = false;
-
-        /// <summary>
-        /// A record of when the last attempt to resume the stream started - must reset it on success.
-        /// </summary>
-        private DateTime? lastAttemptAtStreamResumptionTime = null;
-
-        /// <summary>
-        /// The max time we will wait before we regard resumption is failed and lost.
-        /// </summary>
-        private int maxStreamResumptionTimeoutInSecond = 30;
+		/// <summary>
+		/// The max time we will wait before we regard resumption is failed and lost.
+		/// </summary>
+		private int maxStreamResumptionTimeoutInSecond = 30;
 
 		/// <summary>
 		/// A global so we know if we are in the process of trying to create a new stream
@@ -1516,13 +1506,125 @@ namespace Sharp.Xmpp.Core
 		/// </summary>
 		private int maxNewStreamTimeoutInSecond = 30;
 
+		/// <summary>
+		/// The maximum number of times we can try to resume a broken connection
+		/// </summary>
+		private const int MAX_STANZAS_BEFORE_ACK_REQUEST = 3;
+
+		/// <summary>
+		/// The maximum time without any kind of acknowledgement request to the server.
+		/// </summary>
+		private int maxTimeBetweenAcknowledgementInSeconds = 20;
+
+
+		/// <summary>
+		/// The sequence of stanzas that has been sent for this connection.
+		/// </summary>
+		private int currentOutboundStanzaSequence = 0;
+
+		/// <summary>
+		/// The number of messages that have been receieved by this client.
+		/// </summary>
+		private int currentInboundStanzaSequence = 0;
+
+        /// <summary>
+        /// A cache of items that have been sent but not confirmed.
+        /// </summary>
+        private BlockingCollection<Stanza> stanzaQueueCache = new BlockingCollection<Stanza>();
+
+		/// <summary>
+		/// Stores the sequence identifier from the previous stream if there was a failure.
+		/// Allows us to at least attempt a recovery.
+		/// </summary>
+		int? resumedStreamServerSequence = null;
+
+		/// <summary>
+		/// Enables stream management. You should listen for the StreamManagementEnabled event
+		/// to know when it is ready.
+		/// <param name="withresumption">Whether we should enabled resumption on the stream.</param>
+		/// <param name="maxTimeout">The max timeout client request - the server can override this.</param>
+		/// </summary>
+		public void EnableStreamManagement(bool withresumption = true, int maxTimeout = 60)
+        {
+            // Send <enable xmlns='urn:xmpp:sm:3'/>
+            XmlElement sm = Xml.Element("enable", STREAM_MANAGEMENT_NS);
+            sm.SetAttribute("resume", withresumption.ToString().ToLower());
+            sm.SetAttribute("max", maxTimeout.ToString());
+
+            // send to the server - a message will be sent back later
+            Send(sm);
+		}
+
+        /// <summary>
+        /// The callback when stream management is enabled.
+        /// </summary>
+        /// <param name="enabled">Enabled.</param>
+        private void HandleStreamManagementEnabledResponse(XmlElement enabled)
+        {
+            // IF WE ARE COMING FROM A STREAM THAT WAS BROUGHT BACK FROM A PREVIOUS FAILURE
+            if (resumedStreamServerSequence.HasValue)
+            {
+                // update as the last sequence
+                lastConfirmedServerSequence = resumedStreamServerSequence.Value;
+
+                // from the last confirmed value up to the one it has now, remove from the cache
+                for (int i = lastConfirmedServerSequence; i < resumedStreamServerSequence; i++)
+                {
+                    stanzaQueueCache.Take();
+                }
+
+                // now resend anything left over
+                for (int i = 0; i < stanzaQueueCache.Count; i++)
+                {
+                    Stanza stanza = stanzaQueueCache.ElementAt(i);
+                    Send(stanza, false);
+                }
+
+                // reset
+                resumedStreamServerSequence = null;
+            }
+            else
+            {
+                // if we have anything in the cache (from a previously fauiled session) then send it
+                for (int i = 0; i < stanzaQueueCache.Count; i++)
+                {
+                    Stanza stanza = stanzaQueueCache.ElementAt(i);
+                    Send(stanza, false);
+                }
+            }
+
+            // normal behaviour below ...
+
+			// reset other variables - usually these are set when there was a previous stream
+			isAttemptingNewStream = false;
+			lastAttemptAtNewStreamTime = null;
+			isAttemptingStreamResumption = false;
+			lastAttemptAtStreamResumptionTime = null;
+			lastConfirmedServerTime = DateTime.Now;
+            currentResumptionAttempt = 0;   //reset for next time
+            currentStreamAttempt = 0;
+            currentOutboundStanzaSequence = 0;  //resets when it is a new stream
+            currentInboundStanzaSequence = 0;
+
+			// we have stream management enabled so lets get started
+			streamManagementEnabled = true;
+            resumptionEnabled = Boolean.Parse(enabled.GetAttribute("resume"));
+            resumptionId = enabled.GetAttribute("id");
+            int.TryParse(enabled.GetAttribute("max"), out maxResumptionPeriodInSeconds);
+
+            // manage the stream uptime
+            CheckStreamCycle();
+
+            // throw an event to say we're ready with resumption
+            StreamManagementEnabled.Raise(this, null);
+        }
+
         /// <summary>
         /// This will periodically check whether the server connection is up and 
         /// if not it will kick of a process to try and resume it, or create a new stream.
         /// </summary>
         private void CheckStreamCycle()
         {
-            int streamCycleCheckTimeInSeconds = 10;
             System.Timers.Timer timer = new System.Timers.Timer();
             timer.Interval = streamCycleCheckTimeInSeconds * 1000;
             timer.Enabled = true;
@@ -1531,6 +1633,7 @@ namespace Sharp.Xmpp.Core
             timer.Elapsed += (sender, e) => {
 
                 // if we are in the process of trying to create a new stream and that has been going on too long throw an error (for now)
+
                 if (isAttemptingNewStream
                    && currentStreamAttempt > MAX_STREAM_ATTEMPTS
                    && lastAttemptAtNewStreamTime.HasValue
@@ -1567,6 +1670,13 @@ namespace Sharp.Xmpp.Core
                             // we will reset the variables below when we get a stream management response
                             EnableStreamManagement(resumptionEnabled, maxResumptionPeriodInSeconds);
 
+							// send items we have in the cache - we don't know what failed
+							for (int i = 0; i < stanzaQueueCache.Count; i++)
+							{
+								Stanza stanza = stanzaQueueCache.ElementAt(i);
+								Send(stanza, false);
+							}
+
                         } else {
                             
 							// if successful then reset
@@ -1577,6 +1687,8 @@ namespace Sharp.Xmpp.Core
 							lastConfirmedServerTime = DateTime.Now;
                             currentResumptionAttempt = 0;   //reset for next time
                             currentStreamAttempt = 0;
+                            currentOutboundStanzaSequence = 0;  //resets when it is a new stream
+                            currentInboundStanzaSequence = 0;
 						}
 
                         return;
@@ -1587,19 +1699,44 @@ namespace Sharp.Xmpp.Core
                         return;
                     }
                 }
-                else if (isAttemptingStreamResumption
-                         && currentResumptionAttempt > MAX_RESUMPTION_ATTEMPTS)  // we are in the process of resuming so let that run
-                    return;
 
-                // Normal path here - if we have had no response from the server at all in a given period despite an attempt we will try to resume the stream
-                if (DateTime.Now > lastConfirmedServerTime.AddSeconds(maxTimeBetweenConfirmationsInSeconds))
+                // If we are not trying to resume the connection && have had no response from the server at all in a given period despite an attempt we will try to resume the stream
+                if (!isAttemptingStreamResumption 
+                    && DateTime.Now > lastConfirmedServerTime.AddSeconds(maxTimeBetweenConfirmationsInSeconds))
                 {
                     // we will try getting the connection back again
                     currentResumptionAttempt++;
 
                     // try to resume the connection
                     ResumeStream();
+
+                    // we don't want to send through a request until the stream says it is ready
+                    return;
                 }
+
+				// if you ARE attempting a resumption but it has been going on too long then we need to try again
+				if (isAttemptingStreamResumption
+                    && lastAttemptAtStreamResumptionTime.HasValue
+				    && DateTime.Now > lastAttemptAtStreamResumptionTime.Value.AddSeconds(maxStreamResumptionTimeoutInSecond))
+				{
+					// we will try getting the connection back again
+					currentResumptionAttempt++;
+
+					// try to resume the connection
+					ResumeStream();
+
+					// we don't want to send through a request until the stream says it is ready
+					return;
+				}
+
+				// Normal path here - have we got to the threshhold of items added or the timeout for checks for acks?
+				if ((currentOutboundStanzaSequence > 0 
+                     && currentOutboundStanzaSequence % MAX_STANZAS_BEFORE_ACK_REQUEST == 0)
+                        || DateTime.Now > lastConfirmedServerTime.AddSeconds(maxTimeBetweenAcknowledgementInSeconds))
+				{
+					// request for acknowlegement
+					Send("<r xmlns='urn:xmpp:sm:3'/>");
+				}
             };
 
             timer.Start();
@@ -1630,6 +1767,56 @@ namespace Sharp.Xmpp.Core
         }
 
 		/// <summary>
+		/// Thrown when we receive an exception in stream management.
+		/// </summary>
+		/// <param name="failed">Failure element.</param>
+		private void HandleStreamManagementFailedResponse(XmlElement failed)
+		{
+            /* 
+             <failed xmlns='urn:xmpp:sm:3'
+                    h='another-sequence-number'>
+              <item-not-found xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
+            </failed>
+            */
+
+            // I think it is supposed to create a new session when this happens - even if it is not the same
+            // as the previous one, but this doesn't *seem* to be working. In this case, let's create a brand new
+            // session.
+
+            if (failed.FirstChild.LocalName == "item-not-found")
+            {
+                // store this so we can resend after the stream is back up
+                if (failed.HasAttribute("h"))
+                {
+					// store the sequence so we can resend once we've connected
+					resumedStreamServerSequence = int.Parse(failed.GetAttribute("h"));
+                }
+
+                // create a new connection
+				Connect(this.resource);
+				lastConfirmedServerTime = DateTime.Now;
+
+				// ### reset as we are now no longer trying to resume the stream
+				isAttemptingStreamResumption = false;
+				lastAttemptAtStreamResumptionTime = null;
+				currentResumptionAttempt = 0;   //reset for next time
+				// ### 
+
+				///// we will reset the variables below when we get a stream management response
+				EnableStreamManagement(resumptionEnabled, maxResumptionPeriodInSeconds);
+			}
+			else
+			{
+				// we have some other issue
+				var err = new XmppErrorException(new XmppError(failed));
+				Error.Raise(this, new ErrorEventArgs(err));
+			}
+
+			// throw an event to say we're ready with resumption
+			StreamResumed.Raise(this, null);
+		}
+
+		/// <summary>
 		/// The callback when stream is resumed.
 		/// </summary>
 		/// <param name="resumed">Resumed xml element.</param>
@@ -1641,12 +1828,53 @@ namespace Sharp.Xmpp.Core
             currentResumptionAttempt = 0;   //reset for next time
 
             // what is the last item the server is aware of and record at what point that is
-            lastConfirmedServerSequence = int.Parse(resumed.GetAttribute("h"));
-            lastConfirmedServerTime = DateTime.Now;
+            int sequence = int.Parse(resumed.GetAttribute("h"));
+
+			// from the last confirmed value up to the one it has now, remove from the cache
+			for (int i = lastConfirmedServerSequence; i < sequence; i++)
+			{
+				stanzaQueueCache.Take();
+			}
+
+            // now resend anything left over
+            for (int i = 0; i < stanzaQueueCache.Count; i++)
+            {
+                Stanza stanza = stanzaQueueCache.ElementAt(i);
+                Send(stanza, false);
+            }
+
+			// update as the last sequence
+			lastConfirmedServerSequence = sequence;
+			lastConfirmedServerTime = DateTime.Now;
 
 			// throw an event to say we're ready with resumption
 			StreamResumed.Raise(this, null);
 		}
+
+		/// <summary>
+		/// When an acknowledgement event is recieved.
+		/// </summary>
+		/// <param name="ack">Ack element.</param>
+		private void HandleAcknowledgementResponse(XmlElement ack)
+        {
+            // what sequence does the server have>
+            int sequence = int.Parse(ack.GetAttribute("h"));
+
+            // from the last confirmed value up to the one it has now, remove from the cache
+            for (int i = lastConfirmedServerSequence; i < sequence; i++)
+            {
+                stanzaQueueCache.Take();
+            }
+
+            // ###
+			isAttemptingStreamResumption = false;
+			lastAttemptAtStreamResumptionTime = null;
+			currentResumptionAttempt = 0;   //reset for next time
+
+            // update as the last sequence
+			lastConfirmedServerSequence = sequence;
+            lastConfirmedServerTime = DateTime.Now;
+        }
 
         #endregion
 
