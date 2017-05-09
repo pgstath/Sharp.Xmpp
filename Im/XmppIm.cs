@@ -485,7 +485,7 @@ namespace XMPPEngineer.Im
         /// <exception cref="XmppException">An XMPP error occurred while negotiating the
         /// XML stream with the server, or resource binding failed, or the initialization
         /// of an XMPP extension failed.</exception>
-        public void Autenticate(string username, string password)
+        public void Authenticate(string username, string password)
         {
             username.ThrowIfNull("username");
             password.ThrowIfNull("password");

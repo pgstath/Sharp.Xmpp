@@ -862,7 +862,7 @@ namespace XMPPEngineer.Client
         /// of an XMPP extension failed.</exception>
         public void Authenticate(string username, string password)
         {
-            im.Autenticate(username, password);
+            im.Authenticate(username, password);
         }
 
 		/// <summary>
