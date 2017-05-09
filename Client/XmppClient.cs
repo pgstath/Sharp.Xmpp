@@ -458,6 +458,36 @@ namespace Sharp.Xmpp.Client
             }
         }
 
+		/// <summary>
+		/// The event that is raised when stream management is enabled.
+		/// </summary>
+		public event EventHandler<EventArgs> StreamManagementEnabled
+		{
+			add
+			{
+				im.StreamManagementEnabled += value;
+			}
+			remove
+			{
+				im.StreamManagementEnabled -= value;
+			}
+		}
+
+		/// <summary>
+		/// The event that is raised when a stream is resumed.
+		/// </summary>
+		public event EventHandler<EventArgs> StreamResumed
+		{
+			add
+			{
+				im.StreamResumed += value;
+			}
+			remove
+			{
+				im.StreamResumed -= value;
+			}
+		}
+
         /// <summary>
         /// The event that is raised when a chat message is received.
         /// </summary>
@@ -825,6 +855,20 @@ namespace Sharp.Xmpp.Client
         {
             im.Autenticate(username, password);
         }
+
+		/// <summary>
+		/// Enables stream management. You should listen for the StreamManagementEnabled event
+		/// to know when it is ready.
+		/// <param name="withresumption">Whether we should enabled resumption on the stream.</param>
+		/// <param name="maxTimeout">The max timeout client request - the server can override this.</param>
+		/// </summary>
+		public void EnableStreamManagement(bool withresumption = true, int maxTimeout = 60)
+		{
+            AssertValid();
+
+			// enable sm
+			im.EnableStreamManagement(withresumption, maxTimeout);
+		}
 
         /// <summary>
         /// Sends a chat message with the specified content to the specified JID.

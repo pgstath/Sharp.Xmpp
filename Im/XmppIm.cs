@@ -250,6 +250,16 @@ namespace Sharp.Xmpp.Im
         /// </summary>
         public event EventHandler<MessageEventArgs> Message;
 
+		/// <summary>
+		/// The event that is raised when stream management is enabled.
+		/// </summary>
+		public event EventHandler<EventArgs> StreamManagementEnabled;
+
+		/// <summary>
+		/// The event that is raised when a stream is resumed.
+		/// </summary>
+		public event EventHandler<EventArgs> StreamResumed;
+
         /// <summary>
         /// The event that is raised when a subscription request made by the JID
         /// associated with this instance has been approved.
@@ -496,6 +506,21 @@ namespace Sharp.Xmpp.Im
             body.ThrowIfNullOrEmpty("body");
             Message m = new Message(to, body, subject, thread, type, language);
             SendMessage(m);
+        }
+
+		/// <summary>
+		/// Enables stream management. You should listen for the StreamManagementEnabled event
+		/// to know when it is ready.
+		/// <param name="withresumption">Whether we should enabled resumption on the stream.</param>
+		/// <param name="maxTimeout">The max timeout client request - the server can override this.</param>
+		/// </summary>
+		public void EnableStreamManagement(bool withresumption = true, int maxTimeout = 60)
+        {
+            // raise any events we get
+            core.StreamManagementEnabled += StreamManagementEnabled.Raise;
+
+            // enable sm
+            core.EnableStreamManagement(withresumption, maxTimeout);
         }
 
         /// <summary>

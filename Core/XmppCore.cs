@@ -1365,6 +1365,8 @@ namespace Sharp.Xmpp.Core
 							break;
 
                         case "r":
+                            lastConfirmationAttemptServerTime = DateTime.Now;
+
                             // we tell the server about the number of items we have received in this stream
                             Send("<a h='" + currentInboundStanzaSequence.ToString() + "' xmlns='urn:xmpp:sm:3'/>");
                             break;
@@ -1452,7 +1454,7 @@ namespace Sharp.Xmpp.Core
 
 		/// <summary>
 		/// The last time any kind of confirmation was asked of the server.
-        /// Acknowledgements, Resumption and so on. DO NOT KNOW IF I NEED THIS??
+        /// Acknowledgements, Resumption and so on.
 		/// </summary>
 		private DateTime lastConfirmationAttemptServerTime = DateTime.MinValue;
 
@@ -1556,42 +1558,51 @@ namespace Sharp.Xmpp.Core
 		}
 
         /// <summary>
+        /// This will check if the stream management has been re-enabled after a previous stream failure.
+        /// If so, it will try to send anything that may hvae been missed.
+        /// </summary>
+        private void CheckIfResumedFromFailure()
+        {
+			// IF WE ARE COMING FROM A STREAM THAT WAS BROUGHT BACK FROM A PREVIOUS FAILURE
+			if (resumedStreamServerSequence.HasValue)
+			{
+				// update as the last sequence
+				lastConfirmedServerSequence = resumedStreamServerSequence.Value;
+
+				// from the last confirmed value up to the one it has now, remove from the cache
+				for (int i = lastConfirmedServerSequence; i < resumedStreamServerSequence; i++)
+				{
+					stanzaQueueCache.Take();
+				}
+
+				// now resend anything left over
+				for (int i = 0; i < stanzaQueueCache.Count; i++)
+				{
+					Stanza stanza = stanzaQueueCache.ElementAt(i);
+					Send(stanza, false);
+				}
+
+				// reset
+				resumedStreamServerSequence = null;
+			}
+			else
+			{
+				// if we have anything in the cache (from a previously fauiled session) then send it
+				for (int i = 0; i < stanzaQueueCache.Count; i++)
+				{
+					Stanza stanza = stanzaQueueCache.ElementAt(i);
+					Send(stanza, false);
+				}
+			}            
+        }
+
+        /// <summary>
         /// The callback when stream management is enabled.
         /// </summary>
         /// <param name="enabled">Enabled.</param>
         private void HandleStreamManagementEnabledResponse(XmlElement enabled)
         {
-            // IF WE ARE COMING FROM A STREAM THAT WAS BROUGHT BACK FROM A PREVIOUS FAILURE
-            if (resumedStreamServerSequence.HasValue)
-            {
-                // update as the last sequence
-                lastConfirmedServerSequence = resumedStreamServerSequence.Value;
-
-                // from the last confirmed value up to the one it has now, remove from the cache
-                for (int i = lastConfirmedServerSequence; i < resumedStreamServerSequence; i++)
-                {
-                    stanzaQueueCache.Take();
-                }
-
-                // now resend anything left over
-                for (int i = 0; i < stanzaQueueCache.Count; i++)
-                {
-                    Stanza stanza = stanzaQueueCache.ElementAt(i);
-                    Send(stanza, false);
-                }
-
-                // reset
-                resumedStreamServerSequence = null;
-            }
-            else
-            {
-                // if we have anything in the cache (from a previously fauiled session) then send it
-                for (int i = 0; i < stanzaQueueCache.Count; i++)
-                {
-                    Stanza stanza = stanzaQueueCache.ElementAt(i);
-                    Send(stanza, false);
-                }
-            }
+            CheckIfResumedFromFailure();
 
             // normal behaviour below ...
 
