@@ -28,6 +28,8 @@ namespace XMPPEngineer.Im
         /// </summary>
         private bool disposed;
 
+        bool retrieveRoster = true;
+
         /// <summary>
         /// The set of loaded extensions.
         /// </summary>
@@ -142,6 +144,22 @@ namespace XMPPEngineer.Im
                 core.Validate = value;
             }
         }
+
+		/// <summary>
+		/// If false the connection will not automatically retrieve the rooster
+		/// </summary>
+		public bool RetrieveRoster
+		{
+			get
+			{
+				return retrieveRoster;
+			}
+
+			set
+			{
+				retrieveRoster = value;
+			}
+		}
 
         /// <summary>
         /// Determines whether the session with the server is TLS/SSL encrypted.
@@ -430,11 +448,16 @@ namespace XMPPEngineer.Im
                     return null;
                 // Establish a session (Refer to RFC 3921, Section 3. Session Establishment).
                 EstablishSession();
-                // Retrieve user's roster as recommended (Refer to RFC 3921, Section 7.3).
-                Roster roster = GetRoster();
-                // Send initial presence.
-                SendPresence(new Presence());
-                return roster;
+
+                //If roster is disabled don't send it nor the presence
+                if (!retrieveRoster) return  null;
+
+				// Retrieve user's roster as recommended (Refer to RFC 3921, Section 7.3).
+				Roster roster = GetRoster();
+				// Send initial presence.
+				SendPresence(new Presence());
+
+				return roster;
             }
             catch (SocketException e)
             {
@@ -469,10 +492,16 @@ namespace XMPPEngineer.Im
             core.Authenticate(username, password);
             // Establish a session (Refer to RFC 3921, Section 3. Session Establishment).
             EstablishSession();
-            // Retrieve user's roster as recommended (Refer to RFC 3921, Section 7.3).
-            Roster roster = GetRoster();
-            // Send initial presence.
-            SendPresence(new Presence());
+
+
+            //If roster is disabled don't send it nor the presence
+            if (retrieveRoster)
+            {
+                // Retrieve user's roster as recommended (Refer to RFC 3921, Section 7.3).
+                Roster roster = GetRoster();
+                // Send initial presence.
+                SendPresence(new Presence());
+            }
         }
 
         /// <summary>

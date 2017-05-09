@@ -260,6 +260,15 @@ namespace XMPPEngineer.Client
             }
         }
 
+		/// <summary>
+		/// If false the connection will not try to retrieve the rooster automatically
+		/// </summary>
+		public bool RetrieveRoster
+		{
+			get { return im.RetrieveRoster; }
+			set { im.RetrieveRoster = value; }
+		}
+
         /// <summary>
         /// Determines whether the session with the server is TLS/SSL encrypted.
         /// </summary>
