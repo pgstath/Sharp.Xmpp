@@ -169,10 +169,11 @@ namespace XMPPEngineer.Extensions
 					}
 				}
 
+                bool hasNoAvailability = string.IsNullOrWhiteSpace(stanza.Data["show"]?.InnerText);
 
 				if (person != null) {
 					PrescenceChanged.Raise (this, new GroupPresenceEventArgs (person, statusCodeList));
-					return true;
+					return hasNoAvailability;
 				}
 			}
 
