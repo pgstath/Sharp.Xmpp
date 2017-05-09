@@ -60,6 +60,15 @@ server:
 	                {
 	                    Message messagesm = new Message(new Jid("user@domain"), "Hello, World.");
 	                    clientsm.SendMessage(messagesm);
+
+	                    // xep-0033 - multicast can send to a jid that can then route to multiple users
+	                    System.Collections.Generic.List<Jid> jids = new System.Collections.Generic.List<Jid>();
+	                    jids.Add(new Jid("admin@domain"));
+	                    jids.Add(new Jid("test@domain"));
+	                    jids.Add(new Jid("other@domain"));
+
+	                    Message multimessagesm = new Message(new Jid("multicast.domain"), "Test - " + DateTime.Now.ToLongTimeString(), null, jids);
+	                    clientsm.SendMessage(multimessagesm);
 	                };
 
 	                // enable stream management and recovery mode

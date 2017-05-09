@@ -449,15 +449,24 @@ namespace XMPPEngineer.Im
                 // Establish a session (Refer to RFC 3921, Section 3. Session Establishment).
                 EstablishSession();
 
-                //If roster is disabled don't send it nor the presence
-                if (!retrieveRoster) return  null;
+                //If roster is disabled don't send it
+                if (!retrieveRoster){
+                    
+					// Send initial presence so we can get messages routed
+					SendPresence(new Presence());
 
-				// Retrieve user's roster as recommended (Refer to RFC 3921, Section 7.3).
-				Roster roster = GetRoster();
-				// Send initial presence.
-				SendPresence(new Presence());
+                    return null;
 
-				return roster;
+                } else {
+                    
+					// Retrieve user's roster as recommended (Refer to RFC 3921, Section 7.3).
+					Roster roster = GetRoster();
+					// Send initial presence so we can get messages routed
+					SendPresence(new Presence());
+
+					return roster;
+				}
+
             }
             catch (SocketException e)
             {
@@ -1637,8 +1646,10 @@ namespace XMPPEngineer.Im
         /// Sets up the event handlers for the events exposed by the XmppCore instance.
         /// </summary>
         private void SetupEventHandlers()
-        {
-            core.Iq += (sender, e) => { OnIq(e.Stanza); };
+        {            
+            core.Iq += (sender, e) => { 
+                OnIq(e.Stanza); 
+            };
             core.Presence += (sender, e) =>
             {
                 // FIXME: Raise Error event if constructor raises exception?
