@@ -162,6 +162,53 @@ namespace XMPPEngineer.Client
         /// </summary>
         private MessageCarbons messageCarbons;
 
+		/// <summary>
+		/// What extensions to load? Defaults to all.
+		/// </summary>
+		private AvailableExtensions loadExtensions = AvailableExtensions.All;
+
+		/// <summary>
+		/// The extensions available on the client. Use with the loadExtensions property.
+		/// </summary>
+		[Flags]
+		public enum AvailableExtensions : Int64
+		{
+			// 64 maximum values
+			None = 0,
+			SoftwareVersion = 1,
+			ServiceDiscovery = 2,
+			EntityCapabilities = 4,
+			Ping = 8,
+			Attention = 16,
+			EntityTime = 32,
+			BlockingCommand = 64,
+			Pep = 128,
+			UserTune = 256,
+			UserAvatar = 512,
+			UserMood = 1024,
+			DataForms = 2048,
+			FeatureNegotiation = 4096,
+			StreamInitiation = 8192,
+			SIFileTransfer = 16384,
+			InBandBytestreams = 32768,
+			UserActivity = 65536,
+			Socks5Bytestreams = 131072,
+			FileTransfer = 262144,
+			ServerIpCheck = 524288,
+			MessageCarbons = 1048576,
+			InBandRegistration = 2097152,
+			ChatStateNotifications = 4194304,
+			BitsOfBinary = 8388608,
+			VCardAvatars = 16777216,
+			CustomIqExtension = 33554432,
+			MultiUserChat = 67108864,
+            Default = SoftwareVersion | ServiceDiscovery | EntityCapabilities,
+			All = SoftwareVersion | ServiceDiscovery | EntityCapabilities | Ping | Attention | EntityTime | BlockingCommand | Pep | UserTune | UserAvatar |
+				UserMood | DataForms | FeatureNegotiation | StreamInitiation | SIFileTransfer | InBandBytestreams | UserActivity | Socks5Bytestreams
+				| FileTransfer | ServerIpCheck | MessageCarbons | InBandRegistration | ChatStateNotifications | BitsOfBinary | VCardAvatars | CustomIqExtension
+				| MultiUserChat
+			//134217728, 268435456, 536870912, 1073741824 ... up to 32.
+		}
         /// <summary>
         /// The hostname of the XMPP server to connect to.
         /// </summary>
@@ -736,8 +783,9 @@ namespace XMPPEngineer.Client
         /// <remarks>Use this constructor if you wish to connect to an XMPP server using
         /// an existing set of user credentials.</remarks>
         public XmppClient(string hostname, string username, string password,
+            AvailableExtensions extensions = AvailableExtensions.All,
             int port = 5222, bool tls = true, RemoteCertificateValidationCallback validate = null) :
-			this(hostname, username, password, null, port, tls, validate) { }
+			this(hostname, username, password, null, extensions, port, tls, validate) { }
 
 		/// <summary>
 		/// Initializes a new instance of the XmppClient class.
@@ -762,9 +810,11 @@ namespace XMPPEngineer.Client
 		/// <remarks>Use this constructor if you wish to connect to an XMPP server using
 		/// an existing set of user credentials.</remarks>
 		public XmppClient(string hostname, string username, string password, string server,
+            AvailableExtensions extensions = AvailableExtensions.All,
 			int port = 5222, bool tls = true, RemoteCertificateValidationCallback validate = null)
 		{
 			im = new XmppIm(hostname, username, password, server, port, tls, validate);
+            loadExtensions = extensions;
 			// Initialize the various extension modules.
 			LoadExtensions();
 		}
@@ -787,9 +837,9 @@ namespace XMPPEngineer.Client
         /// is not a valid port number.</exception>
         /// <remarks>Use this constructor if you wish to register an XMPP account using
         /// the in-band account registration process supported by some servers.</remarks>
-        public XmppClient(string hostname, int port = 5222, bool tls = true,
+        public XmppClient(string hostname, AvailableExtensions extensions = AvailableExtensions.All, int port = 5222, bool tls = true,
             RemoteCertificateValidationCallback validate = null) :
-			this(hostname, null, port, tls, validate) { }
+			this(hostname, null, extensions, port, tls, validate) { }
 
 		/// <summary>
 		/// Initializes a new instance of the XmppClient class.
@@ -810,10 +860,12 @@ namespace XMPPEngineer.Client
 		/// is not a valid port number.</exception>
 		/// <remarks>Use this constructor if you wish to register an XMPP account using
 		/// the in-band account registration process supported by some servers.</remarks>
-		public XmppClient(string hostname, string server, int port = 5222, bool tls = true,
+		public XmppClient(string hostname, string server, AvailableExtensions extensions = AvailableExtensions.All,
+            int port = 5222, bool tls = true,
 			RemoteCertificateValidationCallback validate = null)
 		{
 			im = new XmppIm(hostname, server, port, tls, validate);
+            loadExtensions = extensions;
 			LoadExtensions();
 		}
 
@@ -2100,41 +2152,44 @@ namespace XMPPEngineer.Client
                 throw new InvalidOperationException("Not authenticated with XMPP server.");
         }
 
+
         /// <summary>
         /// Initializes the various XMPP extension modules.
         /// </summary>
         private void LoadExtensions()
         {
-            version = im.LoadExtension<SoftwareVersion>();
-            sdisco = im.LoadExtension<ServiceDiscovery>();
-            ecapa = im.LoadExtension<EntityCapabilities>();
-            ping = im.LoadExtension<Ping>();
-            attention = im.LoadExtension<Attention>();
-            time = im.LoadExtension<EntityTime>();
-            block = im.LoadExtension<BlockingCommand>();
-            pep = im.LoadExtension<Pep>();
-            userTune = im.LoadExtension<UserTune>();
+            if ((loadExtensions & AvailableExtensions.SoftwareVersion) == AvailableExtensions.SoftwareVersion) version = im.LoadExtension<SoftwareVersion>();            
+            if ((loadExtensions & AvailableExtensions.ServiceDiscovery) == AvailableExtensions.ServiceDiscovery) sdisco = im.LoadExtension<ServiceDiscovery>();
+            if ((loadExtensions & AvailableExtensions.EntityCapabilities) == AvailableExtensions.EntityCapabilities) ecapa = im.LoadExtension<EntityCapabilities>();
+            if ((loadExtensions & AvailableExtensions.Ping) == AvailableExtensions.Ping) ping = im.LoadExtension<Ping>();
+            if ((loadExtensions & AvailableExtensions.Attention) == AvailableExtensions.Attention) attention = im.LoadExtension<Attention>();
+            if ((loadExtensions & AvailableExtensions.EntityTime) == AvailableExtensions.EntityTime) time = im.LoadExtension<EntityTime>();
+            if ((loadExtensions & AvailableExtensions.BlockingCommand) == AvailableExtensions.BlockingCommand) block = im.LoadExtension<BlockingCommand>();
+            if ((loadExtensions & AvailableExtensions.Pep) == AvailableExtensions.Pep) pep = im.LoadExtension<Pep>();
+            if ((loadExtensions & AvailableExtensions.UserTune) == AvailableExtensions.UserTune) userTune = im.LoadExtension<UserTune>();
 #if WINDOWSPLATFORM
-			userAvatar = im.LoadExtension<UserAvatar>();
+			if ((loadExtensions & AvailableExtensions.UserAvatar) == AvailableExtensions.UserAvatar) userAvatar = im.LoadExtension<UserAvatar>();
 #endif
-            userMood = im.LoadExtension<UserMood>();
-            dataForms = im.LoadExtension<DataForms>();
-            featureNegotiation = im.LoadExtension<FeatureNegotiation>();
-            streamInitiation = im.LoadExtension<StreamInitiation>();
-            siFileTransfer = im.LoadExtension<SIFileTransfer>();
-            inBandBytestreams = im.LoadExtension<InBandBytestreams>();
-            userActivity = im.LoadExtension<UserActivity>();
-            socks5Bytestreams = im.LoadExtension<Socks5Bytestreams>();
-            FileTransferSettings = new FileTransferSettings(socks5Bytestreams,
-                siFileTransfer);
-            serverIpCheck = im.LoadExtension<ServerIpCheck>();
-            messageCarbons = im.LoadExtension<MessageCarbons>();
-            inBandRegistration = im.LoadExtension<InBandRegistration>();
-            chatStateNotifications = im.LoadExtension<ChatStateNotifications>();
-            bitsOfBinary = im.LoadExtension<BitsOfBinary>();
-            vcardAvatars = im.LoadExtension<VCardAvatars>();
-            cusiqextension = im.LoadExtension<CustomIqExtension>();
-            groupChat = im.LoadExtension<MultiUserChat>();
+			if ((loadExtensions & AvailableExtensions.UserMood) == AvailableExtensions.UserMood) userMood = im.LoadExtension<UserMood>();
+            if ((loadExtensions & AvailableExtensions.DataForms) == AvailableExtensions.DataForms) dataForms = im.LoadExtension<DataForms>();
+            if ((loadExtensions & AvailableExtensions.FeatureNegotiation) == AvailableExtensions.FeatureNegotiation) featureNegotiation = im.LoadExtension<FeatureNegotiation>();
+            if ((loadExtensions & AvailableExtensions.StreamInitiation) == AvailableExtensions.StreamInitiation) streamInitiation = im.LoadExtension<StreamInitiation>();
+            if ((loadExtensions & AvailableExtensions.SIFileTransfer) == AvailableExtensions.SIFileTransfer) siFileTransfer = im.LoadExtension<SIFileTransfer>();
+            if ((loadExtensions & AvailableExtensions.InBandBytestreams) == AvailableExtensions.InBandBytestreams) inBandBytestreams = im.LoadExtension<InBandBytestreams>();
+            if ((loadExtensions & AvailableExtensions.UserActivity) == AvailableExtensions.UserActivity) userActivity = im.LoadExtension<UserActivity>();
+            if ((loadExtensions & AvailableExtensions.Socks5Bytestreams) == AvailableExtensions.Socks5Bytestreams) socks5Bytestreams = im.LoadExtension<Socks5Bytestreams>();
+            if ((loadExtensions & AvailableExtensions.FileTransfer) == AvailableExtensions.FileTransfer)
+				FileTransferSettings = new FileTransferSettings(socks5Bytestreams,
+                    siFileTransfer);
+            
+            if ((loadExtensions & AvailableExtensions.ServerIpCheck) == AvailableExtensions.ServerIpCheck) serverIpCheck = im.LoadExtension<ServerIpCheck>();
+            if ((loadExtensions & AvailableExtensions.MessageCarbons) == AvailableExtensions.MessageCarbons) messageCarbons = im.LoadExtension<MessageCarbons>();
+            if ((loadExtensions & AvailableExtensions.InBandRegistration) == AvailableExtensions.InBandRegistration) inBandRegistration = im.LoadExtension<InBandRegistration>();
+            if ((loadExtensions & AvailableExtensions.ChatStateNotifications) == AvailableExtensions.ChatStateNotifications) chatStateNotifications = im.LoadExtension<ChatStateNotifications>();
+            if ((loadExtensions & AvailableExtensions.BitsOfBinary) == AvailableExtensions.BitsOfBinary) bitsOfBinary = im.LoadExtension<BitsOfBinary>();
+            if ((loadExtensions & AvailableExtensions.VCardAvatars) == AvailableExtensions.VCardAvatars) vcardAvatars = im.LoadExtension<VCardAvatars>();
+            if ((loadExtensions & AvailableExtensions.CustomIqExtension) == AvailableExtensions.CustomIqExtension) cusiqextension = im.LoadExtension<CustomIqExtension>();
+            if ((loadExtensions & AvailableExtensions.MultiUserChat) == AvailableExtensions.MultiUserChat) groupChat = im.LoadExtension<MultiUserChat>();
         }
     }
 }
