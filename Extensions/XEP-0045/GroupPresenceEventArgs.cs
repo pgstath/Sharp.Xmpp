@@ -13,6 +13,8 @@ namespace XMPPEngineer.Extensions
         /// </summary>
         public Occupant Person { get; set; }
 
+        public Jid Group { get; }
+
         /// <summary>
         /// 
         /// </summary>
@@ -22,10 +24,12 @@ namespace XMPPEngineer.Extensions
         /// 
         /// </summary>
         /// <param name="person"></param>
+        /// <param name="group"></param>
         /// <param name="statuses"></param>
-        public GroupPresenceEventArgs(Occupant person, IEnumerable<MucStatusType> statuses) : base()
+        public GroupPresenceEventArgs(Occupant person, Jid group, IEnumerable<MucStatusType> statuses) : base()
         {
             Person = person;
+            Group = group;
             Statuses = statuses;
         }
     }
