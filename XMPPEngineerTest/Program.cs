@@ -22,9 +22,9 @@ namespace XMPPEngineerTest
             // with stream management
             using (XmppClient clientsm = new XmppClient(
                 "alchemy.local",
-                "steven",
-                "test",
-                "dev-lite-citym-access.westeurope.cloudapp.azure.com",
+                "admin",
+                "PASSWORD",
+                "alchemy.local",
                 XmppClient.AvailableExtensions.Default | XmppClient.AvailableExtensions.Ping))
 			//XmppClient.AvailableExtensions.DataForms
 			//XmppClient.AvailableExtensions.MessageCarbons

@@ -1,5 +1,9 @@
 ﻿<Properties StartupConfiguration="{5FB57B73-A453-4489-8DBA-ED489832D81E}|Default">
-  <MonoDevelop.Ide.Workbench />
+  <MonoDevelop.Ide.Workbench ActiveDocument="XMPPEngineerTest/Program.cs">
+    <Files>
+      <File FileName="XMPPEngineerTest/Program.cs" Line="21" Column="13" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
