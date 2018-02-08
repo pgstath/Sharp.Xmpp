@@ -172,7 +172,7 @@ namespace XMPPEngineer.Extensions
                 bool hasNoAvailability = string.IsNullOrWhiteSpace(stanza.Data["show"]?.InnerText);
 
 				if (person != null) {
-					PrescenceChanged.Raise (this, new GroupPresenceEventArgs (person, statusCodeList));
+					PrescenceChanged.Raise (this, new GroupPresenceEventArgs (person, new Jid(stanza.From.Domain, stanza.From.Node), statusCodeList));
 					return hasNoAvailability;
 				}
 			}
