@@ -1,5 +1,7 @@
-﻿using S22.Xmpp.Core;
-using S22.Xmpp.Im;
+﻿using XMPPEngineer;
+using XMPPEngineer.Core;
+using XMPPEngineer.Im;
+using XMPPEngineer.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -99,7 +101,7 @@ namespace S22.Xmpp.Extensions
 
 				if (iq.Type == IqType.Result) {
 					// Result must contain a 'feature' element.
-                    im.SendPresence(new S22.Xmpp.Im.Presence(null, null, PresenceType.Available, null, null, Xml.Element("x", "vcard-temp:x:update").Child(Xml.Element("photo").Text(hash))));
+                    im.SendPresence(new XMPPEngineer.Im.Presence(null, null, PresenceType.Available, null, null, Xml.Element("x", "vcard-temp:x:update").Child(Xml.Element("photo").Text(hash))));
 				}
 	
 			});

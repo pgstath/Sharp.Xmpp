@@ -4,12 +4,12 @@ using System.Runtime.CompilerServices;
 // Information about this assembly is defined by the following attributes. 
 // Change them to the values specific to your project.
 
-[assembly: AssemblyTitle("XMPPEngineer")]
-[assembly: AssemblyDescription("XMPPEngineer is a multiplatform, Windows and Android, .NET XMPP client assembly. XMPPEngineer supports IM functionality and a variety of XMPP extensions, is simple and is extensively tested against Android Xamarin. It is a fork of the currently frozen excellent Sharp.XMPP and S22.Xmpp projects.")]
+[assembly: AssemblyTitle("XMPPEngineerTest")]
+[assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("PGStath")]
-[assembly: AssemblyProduct("XMPPEngineer")]
-[assembly: AssemblyCopyright("XMPPEngineer Steven Livingstone-Perez 2016,2017,2018; Sharp.XMPP Panagiotis Georgiou Stathopoulos 2015; S22.Xmpp Torben Könke 2013")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("")]
+[assembly: AssemblyCopyright("${AuthorCopyright}")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
