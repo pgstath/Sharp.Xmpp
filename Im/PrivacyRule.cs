@@ -1,4 +1,4 @@
-﻿namespace Sharp.Xmpp.Im
+﻿namespace XMPPEngineer.Im
 {
     /// <summary>
     /// Represents a generic privacy rule.

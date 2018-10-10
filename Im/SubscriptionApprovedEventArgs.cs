@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Sharp.Xmpp.Im
+namespace XMPPEngineer.Im
 {
     /// <summary>
     /// Provides data for the SubscriptionApproved Event.

@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
-using Sharp.Xmpp.Core;
-using Sharp.Xmpp.Extensions.Dataforms;
-using Sharp.Xmpp.Im;
+using XMPPEngineer.Core;
+using XMPPEngineer.Extensions.Dataforms;
+using XMPPEngineer.Im;
 
-namespace Sharp.Xmpp.Extensions
+namespace XMPPEngineer.Extensions
 {
     internal class MultiUserChat : XmppExtension, IInputFilter<Im.Message>, IInputFilter<Im.Presence>
     {
@@ -169,10 +169,11 @@ namespace Sharp.Xmpp.Extensions
 					}
 				}
 
+                bool hasNoAvailability = string.IsNullOrWhiteSpace(stanza.Data["show"]?.InnerText);
 
 				if (person != null) {
-					PrescenceChanged.Raise (this, new GroupPresenceEventArgs (person, statusCodeList));
-					return true;
+					PrescenceChanged.Raise (this, new GroupPresenceEventArgs (person, new Jid(stanza.From.Domain, stanza.From.Node), statusCodeList));
+					return hasNoAvailability;
 				}
 			}
 
@@ -397,7 +398,7 @@ namespace Sharp.Xmpp.Extensions
         public void EditRoomSubject(Jid room, string subject)
         {
             subject.ThrowIfNull("subject");
-            Im.Message message = new Im.Message(room, null, subject, null, MessageType.Groupchat);
+            Im.Message message = new Im.Message(room, null, subject, null, null, MessageType.Groupchat);
             SendMessage(message);
         }
 

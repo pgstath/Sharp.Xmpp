@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace Sharp.Xmpp.Extensions.Socks5
+namespace XMPPEngineer.Extensions.Socks5
 {
     /// <summary>
     /// Represents a SOCKS5 Username/Password auth-request message.

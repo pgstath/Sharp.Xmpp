@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Sharp.Xmpp.Im
+namespace XMPPEngineer.Im
 {
     /// <summary>
     /// Provides data for the Message event.
@@ -37,5 +37,15 @@ namespace Sharp.Xmpp.Im
             Jid = jid;
             Message = message;
         }
+
+		/// <summary>
+		/// Initializes a new instance of the MessageEventArgs class for bodyless messages.
+		/// </summary>
+		/// <exception cref="ArgumentNullException">The message parameter is null.</exception>
+		public MessageEventArgs(Message message)
+		{
+			message.ThrowIfNull("message");
+			Message = message;
+		}
     }
 }

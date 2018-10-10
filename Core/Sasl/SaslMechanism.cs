@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Sharp.Xmpp.Core.Sasl
+namespace XMPPEngineer.Core.Sasl
 {
     /// <summary>
     /// The abstract base class from which all classes implementing a Sasl

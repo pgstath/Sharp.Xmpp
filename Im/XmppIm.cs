@@ -1,5 +1,5 @@
-﻿using Sharp.Xmpp.Core;
-using Sharp.Xmpp.Extensions;
+﻿using XMPPEngineer.Core;
+using XMPPEngineer.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -10,7 +10,7 @@ using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Xml;
 
-namespace Sharp.Xmpp.Im
+namespace XMPPEngineer.Im
 {
     /// <summary>
     /// Implements the basic instant messaging (IM) and presence functionality.
@@ -27,6 +27,8 @@ namespace Sharp.Xmpp.Im
         /// True if the instance has been disposed of.
         /// </summary>
         private bool disposed;
+
+        bool retrieveRoster = true;
 
         /// <summary>
         /// The set of loaded extensions.
@@ -143,6 +145,22 @@ namespace Sharp.Xmpp.Im
             }
         }
 
+		/// <summary>
+		/// If false the connection will not automatically retrieve the rooster
+		/// </summary>
+		public bool RetrieveRoster
+		{
+			get
+			{
+				return retrieveRoster;
+			}
+
+			set
+			{
+				retrieveRoster = value;
+			}
+		}
+
         /// <summary>
         /// Determines whether the session with the server is TLS/SSL encrypted.
         /// </summary>
@@ -250,6 +268,16 @@ namespace Sharp.Xmpp.Im
         /// </summary>
         public event EventHandler<MessageEventArgs> Message;
 
+		/// <summary>
+		/// The event that is raised when stream management is enabled.
+		/// </summary>
+		public event EventHandler<EventArgs> StreamManagementEnabled;
+
+		/// <summary>
+		/// The event that is raised when a stream is resumed.
+		/// </summary>
+		public event EventHandler<EventArgs> StreamResumed;
+
         /// <summary>
         /// The event that is raised when a subscription request made by the JID
         /// associated with this instance has been approved.
@@ -299,11 +327,36 @@ namespace Sharp.Xmpp.Im
         /// <exception cref="ArgumentOutOfRangeException">The value of the port parameter
         /// is not a valid port number.</exception>
         public XmppIm(string hostname, string username, string password,
-            int port = 5222, bool tls = true, RemoteCertificateValidationCallback validate = null)
-        {
-            core = new XmppCore(hostname, username, password, port, tls, validate);
-            SetupEventHandlers();
-        }
+            int port = 5222, bool tls = true, RemoteCertificateValidationCallback validate = null) :
+		this (hostname, username, password, null, port, tls, validate)
+        { }
+
+		/// <summary>
+		/// Initializes a new instance of the XmppIm.
+		/// </summary>
+		/// <param name="hostname">The hostname of the XMPP server to connect to.</param>
+		/// <param name="username">The username with which to authenticate. In XMPP jargon
+		/// this is known as the 'node' part of the JID.</param>
+		/// <param name="password">The password with which to authenticate.</param>
+		/// <param name="server">The IP address or domain of the XMPP server, if different from the hostname eg. xmpp.server.com</param>
+		/// <param name="port">The port number of the XMPP service of the server.</param>
+		/// <param name="tls">If true the session will be TLS/SSL-encrypted if the server
+		/// supports TLS/SSL-encryption.</param>
+		/// <param name="validate">A delegate used for verifying the remote Secure Sockets
+		/// Layer (SSL) certificate which is used for authentication. Can be null if not
+		/// needed.</param>
+		/// <exception cref="ArgumentNullException">The hostname parameter or the
+		/// username parameter or the password parameter is null.</exception>
+		/// <exception cref="ArgumentException">The hostname parameter or the username
+		/// parameter is the empty string.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">The value of the port parameter
+		/// is not a valid port number.</exception>
+		public XmppIm(string hostname, string username, string password, string server,
+			int port = 5222, bool tls = true, RemoteCertificateValidationCallback validate = null)
+		{
+			core = new XmppCore(hostname, username, password, server, port, tls, validate);
+			SetupEventHandlers();
+		}
 
         /// <summary>
         /// Initializes a new instance of the XmppIm.
@@ -322,11 +375,36 @@ namespace Sharp.Xmpp.Im
         /// <exception cref="ArgumentOutOfRangeException">The value of the port parameter
         /// is not a valid port number.</exception>
         public XmppIm(string hostname, int port = 5222, bool tls = true,
-            RemoteCertificateValidationCallback validate = null)
+            RemoteCertificateValidationCallback validate = null) :
+		this (hostname, null, port , tls, validate)
         {
             core = new XmppCore(hostname, port, tls, validate);
             SetupEventHandlers();
         }
+
+		/// <summary>
+		/// Initializes a new instance of the XmppIm.
+		/// </summary>
+		/// <param name="hostname">The hostname of the XMPP server to connect to.</param>
+		/// <param name="server">The IP address or domain of the XMPP server, if different from the hostname eg. xmpp.server.com</param>
+		/// <param name="port">The port number of the XMPP service of the server.</param>
+		/// <param name="tls">If true the session will be TLS/SSL-encrypted if the server
+		/// supports TLS/SSL-encryption.</param>
+		/// <param name="validate">A delegate used for verifying the remote Secure Sockets
+		/// Layer (SSL) certificate which is used for authentication. Can be null if not
+		/// needed.</param>
+		/// <exception cref="ArgumentNullException">The hostname parameter is
+		/// null.</exception>
+		/// <exception cref="ArgumentException">The hostname parameter is the empty
+		/// string.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">The value of the port parameter
+		/// is not a valid port number.</exception>
+		public XmppIm(string hostname, string server, int port = 5222, bool tls = true,
+			RemoteCertificateValidationCallback validate = null)
+		{
+			core = new XmppCore(hostname, server, port, tls, validate);
+			SetupEventHandlers();
+		}
 
         /// <summary>
         /// Establishes a connection to the XMPP server.
@@ -370,11 +448,25 @@ namespace Sharp.Xmpp.Im
                     return null;
                 // Establish a session (Refer to RFC 3921, Section 3. Session Establishment).
                 EstablishSession();
-                // Retrieve user's roster as recommended (Refer to RFC 3921, Section 7.3).
-                Roster roster = GetRoster();
-                // Send initial presence.
-                SendPresence(new Presence());
-                return roster;
+
+                //If roster is disabled don't send it
+                if (!retrieveRoster){
+                    
+					// Send initial presence so we can get messages routed
+					SendPresence(new Presence());
+
+                    return null;
+
+                } else {
+                    
+					// Retrieve user's roster as recommended (Refer to RFC 3921, Section 7.3).
+					Roster roster = GetRoster();
+					// Send initial presence so we can get messages routed
+					SendPresence(new Presence());
+
+					return roster;
+				}
+
             }
             catch (SocketException e)
             {
@@ -402,17 +494,23 @@ namespace Sharp.Xmpp.Im
         /// <exception cref="XmppException">An XMPP error occurred while negotiating the
         /// XML stream with the server, or resource binding failed, or the initialization
         /// of an XMPP extension failed.</exception>
-        public void Autenticate(string username, string password)
+        public void Authenticate(string username, string password)
         {
             username.ThrowIfNull("username");
             password.ThrowIfNull("password");
             core.Authenticate(username, password);
             // Establish a session (Refer to RFC 3921, Section 3. Session Establishment).
             EstablishSession();
-            // Retrieve user's roster as recommended (Refer to RFC 3921, Section 7.3).
-            Roster roster = GetRoster();
-            // Send initial presence.
-            SendPresence(new Presence());
+
+
+            //If roster is disabled don't send it nor the presence
+            if (retrieveRoster)
+            {
+                // Retrieve user's roster as recommended (Refer to RFC 3921, Section 7.3).
+                Roster roster = GetRoster();
+                // Send initial presence.
+                SendPresence(new Presence());
+            }
         }
 
         /// <summary>
@@ -438,14 +536,29 @@ namespace Sharp.Xmpp.Im
         /// <exception cref="ObjectDisposedException">The XmppIm object has been
         /// disposed.</exception>
         public void SendMessage(Jid to, string body, string subject = null,
-            string thread = null, MessageType type = MessageType.Normal,
+            List<Jid> additionalAddresses = null, string thread = null, MessageType type = MessageType.Normal,
             CultureInfo language = null)
         {
             AssertValid();
             to.ThrowIfNull("to");
             body.ThrowIfNullOrEmpty("body");
-            Message m = new Message(to, body, subject, thread, type, language);
+            Message m = new Message(to, body, subject, additionalAddresses, thread, type, language);
             SendMessage(m);
+        }
+
+		/// <summary>
+		/// Enables stream management. You should listen for the StreamManagementEnabled event
+		/// to know when it is ready.
+		/// <param name="withresumption">Whether we should enabled resumption on the stream.</param>
+		/// <param name="maxTimeout">The max timeout client request - the server can override this.</param>
+		/// </summary>
+		public void EnableStreamManagement(bool withresumption = true, int maxTimeout = 60)
+        {
+            // raise any events we get
+            core.StreamManagementEnabled += StreamManagementEnabled.Raise;
+
+            // enable sm
+            core.EnableStreamManagement(withresumption, maxTimeout);
         }
 
         /// <summary>
@@ -474,12 +587,13 @@ namespace Sharp.Xmpp.Im
         /// disposed.</exception>
         public void SendMessage(Jid to, IDictionary<string, string> bodies,
             IDictionary<string, string> subjects = null, string thread = null,
+            List<Jid> additionalAddresses = null,
             MessageType type = MessageType.Normal, CultureInfo language = null)
         {
             AssertValid();
             to.ThrowIfNull("to");
             bodies.ThrowIfNull("bodies");
-            Message m = new Message(to, bodies, subjects, thread, type, language);
+            Message m = new Message(to, bodies, subjects, additionalAddresses, thread, type, language);
             SendMessage(m);
         }
 
@@ -794,7 +908,7 @@ namespace Sharp.Xmpp.Im
             foreach (string group in item.Groups)
                 xml.Child(Xml.Element("group").Text(group));
             var query = Xml.Element("query", "jabber:iq:roster").Child(xml);
-            Iq iq = IqRequest(IqType.Set, null, Jid, query);
+            Iq iq = IqRequest(IqType.Set, item.Jid, Jid, query);
             if (iq.Type == IqType.Error)
                 throw Util.ExceptionFromError(iq, "The item could not be added to the roster.");
         }
@@ -1532,8 +1646,10 @@ namespace Sharp.Xmpp.Im
         /// Sets up the event handlers for the events exposed by the XmppCore instance.
         /// </summary>
         private void SetupEventHandlers()
-        {
-            core.Iq += (sender, e) => { OnIq(e.Stanza); };
+        {            
+            core.Iq += (sender, e) => { 
+                OnIq(e.Stanza); 
+            };
             core.Presence += (sender, e) =>
             {
                 // FIXME: Raise Error event if constructor raises exception?

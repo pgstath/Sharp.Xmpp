@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Xml;
-using Sharp.Xmpp.Core;
+using XMPPEngineer.Core;
 
-namespace Sharp.Xmpp.Extensions
+namespace XMPPEngineer.Extensions
 {
     /// <summary>
     /// Implements the message history request object as described in XEP-0045.

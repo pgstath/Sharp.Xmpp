@@ -1,10 +1,10 @@
-﻿using Sharp.Xmpp.Core;
-using Sharp.Xmpp.Im;
+﻿using XMPPEngineer.Core;
+using XMPPEngineer.Im;
 using System;
 using System.Collections.Generic;
 using System.Xml;
 
-namespace Sharp.Xmpp.Extensions
+namespace XMPPEngineer.Extensions
 {
     /// <summary>
     /// Implements Mechanism for providing Custom IQ Extensions
@@ -25,7 +25,7 @@ namespace Sharp.Xmpp.Extensions
         {
             get
             {
-                return new string[] { "urn:sharp.xmpp:customiq" };
+                return new string[] { "urn:xmppengineer.xmpp:customiq" };
             }
         }
 
@@ -67,7 +67,7 @@ namespace Sharp.Xmpp.Extensions
             //	return false;
             //get,set, result are supported
             var customIqStanza = stanza.Data["customiq"];
-            if (customIqStanza == null || customIqStanza.NamespaceURI != "urn:sharp.xmpp:customiq")
+            if (customIqStanza == null || customIqStanza.NamespaceURI != "urn:xmppengineer.xmpp:customiq")
                 return false;
             //Result indicates that the request has been received.
             //It has not to do with the semantics of the message
@@ -77,7 +77,7 @@ namespace Sharp.Xmpp.Extensions
 
             CopyNodes(targetDocument, targetDocument, query.FirstChild);
 
-            var xmlresponse = Xml.Element("customiq", "urn:sharp.xmpp:customiq");
+            var xmlresponse = Xml.Element("customiq", "urn:xmppengineer.xmpp:customiq");
             try
             {
                 //call the callback for receiving a relevant stanza
@@ -142,7 +142,7 @@ namespace Sharp.Xmpp.Extensions
                 throw new NotSupportedException("The XMPP entity does not support the " +
                     "'CustomIqExtension' extension.");
             }
-            var xml = Xml.Element("customiq", "urn:sharp.xmpp:customiq").Text(request);
+            var xml = Xml.Element("customiq", "urn:xmppengineer.xmpp:customiq").Text(request);
 
             //The Request is Async
             im.IqRequestAsync(IqType.Get, jid, im.Jid, xml, null, (id, iq) =>
@@ -195,7 +195,7 @@ namespace Sharp.Xmpp.Extensions
                 throw new NotSupportedException("The XMPP entity does not support the " +
                     "'CustomIqExtension' extension.");
             }
-            var xml = Xml.Element("customiq", "urn:sharp.xmpp:customiq").Text(request);
+            var xml = Xml.Element("customiq", "urn:xmppengineer.xmpp:customiq").Text(request);
 
             //The Request is Async
             im.IqRequest(IqType.Get, jid, im.Jid, xml);

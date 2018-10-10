@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Sharp.Xmpp.Extensions
+namespace XMPPEngineer.Extensions
 {
     /// <summary>
     /// Represents an SI session as is negotiated during stream initiation.

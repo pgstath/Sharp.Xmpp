@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Sharp.Xmpp.Im
+namespace XMPPEngineer.Im
 {
     /// <summary>
     /// Defines the possible values for specifying more granular control over

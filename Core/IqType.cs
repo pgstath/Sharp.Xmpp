@@ -1,4 +1,4 @@
-﻿namespace Sharp.Xmpp.Core
+﻿namespace XMPPEngineer.Core
 {
     /// <summary>
     /// Defines the possible types for IQ stanzas.

@@ -1,7 +1,7 @@
-﻿using Sharp.Xmpp.Im;
+﻿using XMPPEngineer.Im;
 using System.Collections.Generic;
 
-namespace Sharp.Xmpp.Extensions
+namespace XMPPEngineer.Extensions
 {
     /// <summary>
     /// Implements the 'Data Forms' extension as defined in XEP-0004.

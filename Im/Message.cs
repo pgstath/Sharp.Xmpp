@@ -2,15 +2,18 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Xml;
 
-namespace Sharp.Xmpp.Im
+namespace XMPPEngineer.Im
 {
     /// <summary>
     /// Represents a Message stanza as defined in XMPP:IM.
     /// </summary>
     public class Message : Core.Message
     {
+        private List<Jid> addresses;
+
         /// <summary>
         /// The type of the message stanza.
         /// </summary>
@@ -152,6 +155,71 @@ namespace Sharp.Xmpp.Im
             }
         }
 
+		/// <summary>
+		/// The addresses of the message.
+		/// </summary>
+		public List<Jid> Addresses
+		{
+			get
+			{
+				XmlElement bare = GetBare("addresses");
+				if (bare != null)
+				{
+					if (addresses == null)
+					{
+						addresses = new List<Jid>();
+
+						foreach (XmlElement child in bare.ChildNodes)
+						{
+							string v = child.GetAttributeNode("jid").Value;
+							if (!String.IsNullOrWhiteSpace(v))
+								addresses.Add(new Jid(v));
+						}
+					}
+				}
+
+				return addresses;
+			}
+
+			set
+			{
+				XmlElement bare = GetBare("addresses");
+				if (bare != null)
+				{
+					if (value == null)
+						element.RemoveChild(bare);
+					else
+					{
+						StringBuilder sb = new StringBuilder();
+						foreach (Jid jid in value)
+						{
+							sb.Append(jid.ToString());
+						}
+						bare.InnerXml = sb.ToString();
+						//bare.InnerText = value;
+					}
+
+				}
+				else
+				{
+					if (value != null)
+					{
+                        System.Text.StringBuilder sb = new StringBuilder();
+						foreach (Jid jid in value)
+						{
+							sb.Append(String.Format("<address type='to' jid='{0}' />", jid.ToString()));
+						}
+
+						XmlElement addressXml = Xml.Element("addresses");
+						addressXml.InnerXml = sb.ToString();
+						addressXml.SetAttribute("xmlns", "http://jabber.org/protocol/address");
+
+						element.Child(addressXml);
+					}
+				}
+			}
+		}
+
         /// <summary>
         /// A dictionary of alternate forms of the message subjects. The keys of the
         /// dictionary denote ISO 2 language codes.
@@ -172,58 +240,73 @@ namespace Sharp.Xmpp.Im
             private set;
         }
 
-        /// <summary>
-        /// Initializes a new instance of the Message class.
-        /// </summary>
-        /// <param name="to">The JID of the intended recipient.</param>
-        /// <param name="body">The content of the message.</param>
-        /// <param name="subject">The subject of the message.</param>
-        /// <param name="thread">The conversation thread this message belongs to.</param>
-        /// <param name="type">The type of the message. Can be one of the values from
-        /// the MessagType enumeration.</param>
-        /// <param name="language">The language of the XML character data of
-        /// the stanza.</param>
-        /// <exception cref="ArgumentNullException">The to parameter is null.</exception>
-        /// <exception cref="ArgumentException">The body parameter is the empty string.</exception>
-        public Message(Jid to, string body = null, string subject = null, string thread = null,
-            MessageType type = MessageType.Normal, CultureInfo language = null)
+		/// <summary>
+		/// A dictionary of alternate forms of the message addresses. The keys of the
+		/// dictionary denote ISO 2 language codes.
+		/// </summary>
+		public IDictionary<string, string> AlternateAddresses
+		{
+			get;
+			private set;
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the Message class.
+		/// </summary>
+		/// <param name="to">The JID of the intended recipient.</param>
+		/// <param name="body">The content of the message.</param>
+		/// <param name="subject">The subject of the message.</param>
+		/// <param name="additionalAddresses">The XEP-0033 of the message.</param>
+		/// <param name="thread">The conversation thread this message belongs to.</param>
+		/// <param name="type">The type of the message. Can be one of the values from
+		/// the MessagType enumeration.</param>
+		/// <param name="language">The language of the XML character data of
+		/// the stanza.</param>
+		/// <exception cref="ArgumentNullException">The to parameter is null.</exception>
+		/// <exception cref="ArgumentException">The body parameter is the empty string.</exception>
+		public Message(Jid to, string body = null, string subject = null, List<Jid> additionalAddresses = null, 
+                       string thread = null, MessageType type = MessageType.Normal, CultureInfo language = null)
             : base(to, null, null, null, language)
         {
             to.ThrowIfNull("to");
             AlternateSubjects = new XmlDictionary(element, "subject", "xml:lang");
             AlternateBodies = new XmlDictionary(element, "body", "xml:lang");
+            AlternateAddresses = new XmlDictionary(element, "addresses", "xml:lang");
             Type = type;
             Body = body;
             Subject = subject;
             Thread = thread;
+            Addresses = additionalAddresses;
         }
 
-        /// <summary>
-        /// Initializes a new instance of the Message class.
-        /// </summary>
-        /// <param name="to">The JID of the intended recipient.</param>
-        /// <param name="bodies">A dictionary of message bodies. The dictionary
-        /// keys denote the languages of the message bodies and must be valid
-        /// ISO 2 letter language codes.</param>
-        /// <param name="subjects">A dictionary of message subjects. The dictionary
-        /// keys denote the languages of the message subjects and must be valid
-        /// ISO 2 letter language codes.</param>
-        /// <param name="thread">The conversation thread this message belongs to.</param>
-        /// <param name="type">The type of the message. Can be one of the values from
-        /// the MessagType enumeration.</param>
-        /// <param name="language">The language of the XML character data of
-        /// the stanza.</param>
-        /// <exception cref="ArgumentNullException">The to parametr or the bodies
-        /// parameter is null.</exception>
-        public Message(Jid to, IDictionary<string, string> bodies,
-            IDictionary<string, string> subjects = null, string thread = null,
-            MessageType type = MessageType.Normal, CultureInfo language = null)
+		/// <summary>
+		/// Initializes a new instance of the Message class.
+		/// </summary>
+		/// <param name="to">The JID of the intended recipient.</param>
+		/// <param name="bodies">A dictionary of message bodies. The dictionary
+		/// keys denote the languages of the message bodies and must be valid
+		/// ISO 2 letter language codes.</param>
+		/// <param name="subjects">A dictionary of message subjects. The dictionary
+		/// keys denote the languages of the message subjects and must be valid
+		/// ISO 2 letter language codes.</param>
+		/// <param name="additionalAddresses">The XEP-0033 of the message.</param>
+		/// <param name="thread">The conversation thread this message belongs to.</param>
+		/// <param name="type">The type of the message. Can be one of the values from
+		/// the MessagType enumeration.</param>
+		/// <param name="language">The language of the XML character data of
+		/// the stanza.</param>
+		/// <exception cref="ArgumentNullException">The to parametr or the bodies
+		/// parameter is null.</exception>
+		public Message(Jid to, IDictionary<string, string> bodies,
+            IDictionary<string, string> subjects = null, List<Jid> additionalAddresses = null, 
+           string thread = null, MessageType type = MessageType.Normal, CultureInfo language = null)
             : base(to, null, null, null, language)
         {
             to.ThrowIfNull("to");
             bodies.ThrowIfNull("bodies");
             AlternateSubjects = new XmlDictionary(element, "subject", "xml:lang");
             AlternateBodies = new XmlDictionary(element, "body", "xml:lang");
+            AlternateAddresses = new XmlDictionary(element, "addresses", "xml:lang");
             Type = type;
             foreach (var pair in bodies)
                 AlternateBodies.Add(pair.Key, pair.Value);
@@ -233,7 +316,64 @@ namespace Sharp.Xmpp.Im
                     AlternateSubjects.Add(pair.Key, pair.Value);
             }
             Thread = thread;
+            Addresses = additionalAddresses;
         }
+
+		/// <summary>
+		/// Initializes a new instance of the Message class.
+		/// </summary>
+		/// <param name="to">The JID of the intended recipient.</param>
+		/// <param name="body">The content of the message.</param>
+		/// <param name="othertagname">The tag name the others items below will be wrapped in - they will have the appropriate namespace assigned.</param>
+		/// <param name="others">A dictionary of additional message elements after body. The dictionary
+		/// keys denote the namespace of the message bodies. The element name should be the same for all items but you can have multiple - 
+		/// each new element will have the namespace associated with it.</param>
+		/// <param name="subjects">A dictionary of message subjects. The dictionary
+		/// keys denote the languages of the message subjects and must be valid
+		/// ISO 2 letter language codes.</param>
+		/// <param name="thread">The conversation thread this message belongs to.</param>
+		/// <param name="type">The type of the message. Can be one of the values from
+		/// the MessagType enumeration.</param>
+		/// <param name="language">The language of the XML character data of
+		/// the stanza.</param>
+		/// <exception cref="ArgumentNullException">The to parametr or the bodies
+		/// parameter is null.</exception>
+		public Message(Jid to, String body, string othertagname, IDictionary<string, string> others,
+			IDictionary<string, string> subjects = null, List<Jid> additionalAddresses = null, 
+            string thread = null, MessageType type = MessageType.Normal, CultureInfo language = null)
+			: base(to, null, null, null, language)
+		{
+			to.ThrowIfNull("to");
+			others.ThrowIfNull("bodies");
+			AlternateSubjects = new XmlDictionary(element, "subject", "xml:lang");
+            Body = body;
+			AlternateBodies = new XmlDictionary(element, othertagname, "xmlns");
+            AlternateAddresses = new XmlDictionary(element, "addresses", "xml:lang");
+			Type = type;
+			foreach (var pair in others)
+				AlternateBodies.Add(pair.Key, pair.Value);
+			if (subjects != null)
+			{
+				foreach (var pair in subjects)
+					AlternateSubjects.Add(pair.Key, pair.Value);
+			}
+			Thread = thread;
+            Addresses = additionalAddresses;
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the Message class from the specified
+		/// instance.
+		/// </summary>
+		/// <param name="data">The message element</param>
+		/// <exception cref="ArgumentNullException">The Data parameter is null.</exception>
+		public Message(XmlElement data)
+		{
+
+			Data.ThrowIfNull("data");
+			type = ParseType(data.GetAttribute("type"));
+			element = data;
+		}
 
         /// <summary>
         /// Initializes a new instance of the Message class from the specified
@@ -251,6 +391,7 @@ namespace Sharp.Xmpp.Im
             element = message.Data;
             AlternateSubjects = new XmlDictionary(element, "subject", "xml:lang");
             AlternateBodies = new XmlDictionary(element, "body", "xml:lang");
+            AlternateAddresses = new XmlDictionary(element, "addresses", "xml:lang");
         }
 
         /// <summary>

@@ -1,12 +1,12 @@
-﻿using Sharp.Xmpp.Extensions;
-using Sharp.Xmpp.Im;
+﻿using XMPPEngineer.Extensions;
+using XMPPEngineer.Im;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Net.Security;
 
-namespace Sharp.Xmpp.Client
+namespace XMPPEngineer.Client
 {
     /// <summary>
     /// Implements an XMPP client providing basic instant messaging (IM) and
@@ -162,6 +162,53 @@ namespace Sharp.Xmpp.Client
         /// </summary>
         private MessageCarbons messageCarbons;
 
+		/// <summary>
+		/// What extensions to load? Defaults to all.
+		/// </summary>
+		private AvailableExtensions loadExtensions = AvailableExtensions.All;
+
+		/// <summary>
+		/// The extensions available on the client. Use with the loadExtensions property.
+		/// </summary>
+		[Flags]
+		public enum AvailableExtensions : Int64
+		{
+			// 64 maximum values
+			None = 0,
+			SoftwareVersion = 1,
+			ServiceDiscovery = 2,
+			EntityCapabilities = 4,
+			Ping = 8,
+			Attention = 16,
+			EntityTime = 32,
+			BlockingCommand = 64,
+			Pep = 128,
+			UserTune = 256,
+			UserAvatar = 512,
+			UserMood = 1024,
+			DataForms = 2048,
+			FeatureNegotiation = 4096,
+			StreamInitiation = 8192,
+			SIFileTransfer = 16384,
+			InBandBytestreams = 32768,
+			UserActivity = 65536,
+			Socks5Bytestreams = 131072,
+			FileTransfer = 262144,
+			ServerIpCheck = 524288,
+			MessageCarbons = 1048576,
+			InBandRegistration = 2097152,
+			ChatStateNotifications = 4194304,
+			BitsOfBinary = 8388608,
+			VCardAvatars = 16777216,
+			CustomIqExtension = 33554432,
+			MultiUserChat = 67108864,
+            Default = SoftwareVersion | ServiceDiscovery | EntityCapabilities,
+			All = SoftwareVersion | ServiceDiscovery | EntityCapabilities | Ping | Attention | EntityTime | BlockingCommand | Pep | UserTune | UserAvatar |
+				UserMood | DataForms | FeatureNegotiation | StreamInitiation | SIFileTransfer | InBandBytestreams | UserActivity | Socks5Bytestreams
+				| FileTransfer | ServerIpCheck | MessageCarbons | InBandRegistration | ChatStateNotifications | BitsOfBinary | VCardAvatars | CustomIqExtension
+				| MultiUserChat
+			//134217728, 268435456, 536870912, 1073741824 ... up to 32.
+		}
         /// <summary>
         /// The hostname of the XMPP server to connect to.
         /// </summary>
@@ -259,6 +306,15 @@ namespace Sharp.Xmpp.Client
                 im.Validate = value;
             }
         }
+
+		/// <summary>
+		/// If false the connection will not try to retrieve the rooster automatically
+		/// </summary>
+		public bool RetrieveRoster
+		{
+			get { return im.RetrieveRoster; }
+			set { im.RetrieveRoster = value; }
+		}
 
         /// <summary>
         /// Determines whether the session with the server is TLS/SSL encrypted.
@@ -457,6 +513,36 @@ namespace Sharp.Xmpp.Client
                 userTune.Tune -= value;
             }
         }
+
+		/// <summary>
+		/// The event that is raised when stream management is enabled.
+		/// </summary>
+		public event EventHandler<EventArgs> StreamManagementEnabled
+		{
+			add
+			{
+				im.StreamManagementEnabled += value;
+			}
+			remove
+			{
+				im.StreamManagementEnabled -= value;
+			}
+		}
+
+		/// <summary>
+		/// The event that is raised when a stream is resumed.
+		/// </summary>
+		public event EventHandler<EventArgs> StreamResumed
+		{
+			add
+			{
+				im.StreamResumed += value;
+			}
+			remove
+			{
+				im.StreamResumed -= value;
+			}
+		}
 
         /// <summary>
         /// The event that is raised when a chat message is received.
@@ -697,12 +783,41 @@ namespace Sharp.Xmpp.Client
         /// <remarks>Use this constructor if you wish to connect to an XMPP server using
         /// an existing set of user credentials.</remarks>
         public XmppClient(string hostname, string username, string password,
-            int port = 5222, bool tls = true, RemoteCertificateValidationCallback validate = null)
-        {
-            im = new XmppIm(hostname, username, password, port, tls, validate);
-            // Initialize the various extension modules.
-            LoadExtensions();
-        }
+            AvailableExtensions extensions = AvailableExtensions.All,
+            int port = 5222, bool tls = true, RemoteCertificateValidationCallback validate = null) :
+			this(hostname, username, password, null, extensions, port, tls, validate) { }
+
+		/// <summary>
+		/// Initializes a new instance of the XmppClient class.
+		/// </summary>
+		/// <param name="hostname">The hostname of the XMPP server to connect to.</param>
+		/// <param name="username">The username with which to authenticate. In XMPP jargon
+		/// this is known as the 'node' part of the JID.</param>
+		/// <param name="password">The password with which to authenticate.</param>
+		/// <param name="server">The IP address or domain of the XMPP server, if different from the hostname. eg. xmpp.server.com</param>
+		/// <param name="port">The port number of the XMPP service of the server.</param>
+		/// <param name="tls">If true the session will be TLS/SSL-encrypted if the server
+		/// supports TLS/SSL-encryption.</param>
+		/// <param name="validate">A delegate used for verifying the remote Secure Sockets
+		/// Layer (SSL) certificate which is used for authentication. Can be null if not
+		/// needed.</param>
+		/// <exception cref="ArgumentNullException">The hostname parameter or the
+		/// username parameter or the password parameter is null.</exception>
+		/// <exception cref="ArgumentException">The hostname parameter or the username
+		/// parameter is the empty string.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">The value of the port parameter
+		/// is not a valid port number.</exception>
+		/// <remarks>Use this constructor if you wish to connect to an XMPP server using
+		/// an existing set of user credentials.</remarks>
+		public XmppClient(string hostname, string username, string password, string server,
+            AvailableExtensions extensions = AvailableExtensions.All,
+			int port = 5222, bool tls = true, RemoteCertificateValidationCallback validate = null)
+		{
+			im = new XmppIm(hostname, username, password, server, port, tls, validate);
+            loadExtensions = extensions;
+			// Initialize the various extension modules.
+			LoadExtensions();
+		}
 
         /// <summary>
         /// Initializes a new instance of the XmppClient class.
@@ -722,12 +837,37 @@ namespace Sharp.Xmpp.Client
         /// is not a valid port number.</exception>
         /// <remarks>Use this constructor if you wish to register an XMPP account using
         /// the in-band account registration process supported by some servers.</remarks>
-        public XmppClient(string hostname, int port = 5222, bool tls = true,
-            RemoteCertificateValidationCallback validate = null)
-        {
-            im = new XmppIm(hostname, port, tls, validate);
-            LoadExtensions();
-        }
+        public XmppClient(string hostname, AvailableExtensions extensions = AvailableExtensions.All, int port = 5222, bool tls = true,
+            RemoteCertificateValidationCallback validate = null) :
+			this(hostname, null, extensions, port, tls, validate) { }
+
+		/// <summary>
+		/// Initializes a new instance of the XmppClient class.
+		/// </summary>
+		/// <param name="hostname">The hostname of the XMPP server to connect to.</param>
+		/// <param name="server">The IP address or domain of the XMPP server, if different from the hostname eg. xmpp.server.com</param>
+		/// <param name="port">The port number of the XMPP service of the server.</param>
+		/// <param name="tls">If true the session will be TLS/SSL-encrypted if the server
+		/// supports TLS/SSL-encryption.</param>
+		/// <param name="validate">A delegate used for verifying the remote Secure Sockets
+		/// Layer (SSL) certificate which is used for authentication. Can be null if not
+		/// needed.</param>
+		/// <exception cref="ArgumentNullException">The hostname parameter is
+		/// null.</exception>
+		/// <exception cref="ArgumentException">The hostname parameter is the empty
+		/// string.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">The value of the port parameter
+		/// is not a valid port number.</exception>
+		/// <remarks>Use this constructor if you wish to register an XMPP account using
+		/// the in-band account registration process supported by some servers.</remarks>
+		public XmppClient(string hostname, string server, AvailableExtensions extensions = AvailableExtensions.All,
+            int port = 5222, bool tls = true,
+			RemoteCertificateValidationCallback validate = null)
+		{
+			im = new XmppIm(hostname, server, port, tls, validate);
+            loadExtensions = extensions;
+			LoadExtensions();
+		}
 
         /// <summary>
         /// Establishes a connection to the XMPP server.
@@ -774,40 +914,55 @@ namespace Sharp.Xmpp.Client
         /// of an XMPP extension failed.</exception>
         public void Authenticate(string username, string password)
         {
-            im.Autenticate(username, password);
+            im.Authenticate(username, password);
         }
 
-        /// <summary>
-        /// Sends a chat message with the specified content to the specified JID.
-        /// </summary>
-        /// <param name="to">The JID of the intended recipient.</param>
-        /// <param name="body">The content of the message.</param>
-        /// <param name="subject">The subject of the message.</param>
-        /// <param name="thread">The conversation thread the message belongs to.</param>
-        /// <param name="type">The type of the message. Can be one of the values from
-        /// the MessagType enumeration.</param>
-        /// <param name="language">The language of the XML character data of
-        /// the stanza.</param>
-        /// <exception cref="ArgumentNullException">The to parameter or the body parameter
-        /// is null.</exception>
-        /// <exception cref="ArgumentException">The body parameter is the empty
-        /// string.</exception>
-        /// <exception cref="IOException">There was a failure while writing to or reading
-        /// from the network.</exception>
-        /// <exception cref="InvalidOperationException">The XmppClient instance is not
-        /// connected to a remote host, or the XmppClient instance has not authenticated with
-        /// the XMPP server.</exception>
-        /// <exception cref="ObjectDisposedException">The XmppClient object has been
-        /// disposed.</exception>
-        /// <include file='Examples.xml' path='S22/Xmpp/Client/XmppClient[@name="SendMessage-1"]/*'/>
-        public void SendMessage(Jid to, string body, string subject = null,
-            string thread = null, MessageType type = MessageType.Normal,
+		/// <summary>
+		/// Enables stream management. You should listen for the StreamManagementEnabled event
+		/// to know when it is ready.
+		/// <param name="withresumption">Whether we should enabled resumption on the stream.</param>
+		/// <param name="maxTimeout">The max timeout client request - the server can override this.</param>
+		/// </summary>
+		public void EnableStreamManagement(bool withresumption = true, int maxTimeout = 60)
+		{
+            AssertValid();
+
+			// enable sm
+			im.EnableStreamManagement(withresumption, maxTimeout);
+		}
+
+		/// <summary>
+		/// Sends a chat message with the specified content to the specified JID.
+		/// </summary>
+		/// <param name="to">The JID of the intended recipient.</param>
+		/// <param name="body">The content of the message.</param>
+		/// <param name="subject">The subject of the message.</param>
+		/// <param name="additionalAddresses">Any additional address to send to XEP-0033.</param>
+		/// <param name="thread">The conversation thread the message belongs to.</param>
+		/// <param name="type">The type of the message. Can be one of the values from
+		/// the MessagType enumeration.</param>
+		/// <param name="language">The language of the XML character data of
+		/// the stanza.</param>
+		/// <exception cref="ArgumentNullException">The to parameter or the body parameter
+		/// is null.</exception>
+		/// <exception cref="ArgumentException">The body parameter is the empty
+		/// string.</exception>
+		/// <exception cref="IOException">There was a failure while writing to or reading
+		/// from the network.</exception>
+		/// <exception cref="InvalidOperationException">The XmppClient instance is not
+		/// connected to a remote host, or the XmppClient instance has not authenticated with
+		/// the XMPP server.</exception>
+		/// <exception cref="ObjectDisposedException">The XmppClient object has been
+		/// disposed.</exception>
+		/// <include file='Examples.xml' path='S22/Xmpp/Client/XmppClient[@name="SendMessage-1"]/*'/>
+		public void SendMessage(Jid to, string body, string subject = null,
+            List<Jid> additionalAddresses = null, string thread = null, MessageType type = MessageType.Normal,
             CultureInfo language = null)
         {
             AssertValid();
             to.ThrowIfNull("to");
             body.ThrowIfNullOrEmpty("body");
-            im.SendMessage(to, body, subject, thread, type, language);
+            im.SendMessage(to, body, subject, additionalAddresses, thread, type, language);
         }
 
         /// <summary>
@@ -847,7 +1002,7 @@ namespace Sharp.Xmpp.Client
             AssertValid();
             to.ThrowIfNull("to");
             bodies.ThrowIfNull("bodies");
-            im.SendMessage(to, bodies, subjects, thread, type, language);
+            im.SendMessage(to, bodies, subjects, thread, null, type, language);
         }
 
         /// <summary>
@@ -1997,41 +2152,44 @@ namespace Sharp.Xmpp.Client
                 throw new InvalidOperationException("Not authenticated with XMPP server.");
         }
 
+
         /// <summary>
         /// Initializes the various XMPP extension modules.
         /// </summary>
         private void LoadExtensions()
         {
-            version = im.LoadExtension<SoftwareVersion>();
-            sdisco = im.LoadExtension<ServiceDiscovery>();
-            ecapa = im.LoadExtension<EntityCapabilities>();
-            ping = im.LoadExtension<Ping>();
-            attention = im.LoadExtension<Attention>();
-            time = im.LoadExtension<EntityTime>();
-            block = im.LoadExtension<BlockingCommand>();
-            pep = im.LoadExtension<Pep>();
-            userTune = im.LoadExtension<UserTune>();
+            if ((loadExtensions & AvailableExtensions.SoftwareVersion) == AvailableExtensions.SoftwareVersion) version = im.LoadExtension<SoftwareVersion>();            
+            if ((loadExtensions & AvailableExtensions.ServiceDiscovery) == AvailableExtensions.ServiceDiscovery) sdisco = im.LoadExtension<ServiceDiscovery>();
+            if ((loadExtensions & AvailableExtensions.EntityCapabilities) == AvailableExtensions.EntityCapabilities) ecapa = im.LoadExtension<EntityCapabilities>();
+            if ((loadExtensions & AvailableExtensions.Ping) == AvailableExtensions.Ping) ping = im.LoadExtension<Ping>();
+            if ((loadExtensions & AvailableExtensions.Attention) == AvailableExtensions.Attention) attention = im.LoadExtension<Attention>();
+            if ((loadExtensions & AvailableExtensions.EntityTime) == AvailableExtensions.EntityTime) time = im.LoadExtension<EntityTime>();
+            if ((loadExtensions & AvailableExtensions.BlockingCommand) == AvailableExtensions.BlockingCommand) block = im.LoadExtension<BlockingCommand>();
+            if ((loadExtensions & AvailableExtensions.Pep) == AvailableExtensions.Pep) pep = im.LoadExtension<Pep>();
+            if ((loadExtensions & AvailableExtensions.UserTune) == AvailableExtensions.UserTune) userTune = im.LoadExtension<UserTune>();
 #if WINDOWSPLATFORM
-			userAvatar = im.LoadExtension<UserAvatar>();
+			if ((loadExtensions & AvailableExtensions.UserAvatar) == AvailableExtensions.UserAvatar) userAvatar = im.LoadExtension<UserAvatar>();
 #endif
-            userMood = im.LoadExtension<UserMood>();
-            dataForms = im.LoadExtension<DataForms>();
-            featureNegotiation = im.LoadExtension<FeatureNegotiation>();
-            streamInitiation = im.LoadExtension<StreamInitiation>();
-            siFileTransfer = im.LoadExtension<SIFileTransfer>();
-            inBandBytestreams = im.LoadExtension<InBandBytestreams>();
-            userActivity = im.LoadExtension<UserActivity>();
-            socks5Bytestreams = im.LoadExtension<Socks5Bytestreams>();
-            FileTransferSettings = new FileTransferSettings(socks5Bytestreams,
-                siFileTransfer);
-            serverIpCheck = im.LoadExtension<ServerIpCheck>();
-            messageCarbons = im.LoadExtension<MessageCarbons>();
-            inBandRegistration = im.LoadExtension<InBandRegistration>();
-            chatStateNotifications = im.LoadExtension<ChatStateNotifications>();
-            bitsOfBinary = im.LoadExtension<BitsOfBinary>();
-            vcardAvatars = im.LoadExtension<VCardAvatars>();
-            cusiqextension = im.LoadExtension<CustomIqExtension>();
-            groupChat = im.LoadExtension<MultiUserChat>();
+			if ((loadExtensions & AvailableExtensions.UserMood) == AvailableExtensions.UserMood) userMood = im.LoadExtension<UserMood>();
+            if ((loadExtensions & AvailableExtensions.DataForms) == AvailableExtensions.DataForms) dataForms = im.LoadExtension<DataForms>();
+            if ((loadExtensions & AvailableExtensions.FeatureNegotiation) == AvailableExtensions.FeatureNegotiation) featureNegotiation = im.LoadExtension<FeatureNegotiation>();
+            if ((loadExtensions & AvailableExtensions.StreamInitiation) == AvailableExtensions.StreamInitiation) streamInitiation = im.LoadExtension<StreamInitiation>();
+            if ((loadExtensions & AvailableExtensions.SIFileTransfer) == AvailableExtensions.SIFileTransfer) siFileTransfer = im.LoadExtension<SIFileTransfer>();
+            if ((loadExtensions & AvailableExtensions.InBandBytestreams) == AvailableExtensions.InBandBytestreams) inBandBytestreams = im.LoadExtension<InBandBytestreams>();
+            if ((loadExtensions & AvailableExtensions.UserActivity) == AvailableExtensions.UserActivity) userActivity = im.LoadExtension<UserActivity>();
+            if ((loadExtensions & AvailableExtensions.Socks5Bytestreams) == AvailableExtensions.Socks5Bytestreams) socks5Bytestreams = im.LoadExtension<Socks5Bytestreams>();
+            if ((loadExtensions & AvailableExtensions.FileTransfer) == AvailableExtensions.FileTransfer)
+				FileTransferSettings = new FileTransferSettings(socks5Bytestreams,
+                    siFileTransfer);
+            
+            if ((loadExtensions & AvailableExtensions.ServerIpCheck) == AvailableExtensions.ServerIpCheck) serverIpCheck = im.LoadExtension<ServerIpCheck>();
+            if ((loadExtensions & AvailableExtensions.MessageCarbons) == AvailableExtensions.MessageCarbons) messageCarbons = im.LoadExtension<MessageCarbons>();
+            if ((loadExtensions & AvailableExtensions.InBandRegistration) == AvailableExtensions.InBandRegistration) inBandRegistration = im.LoadExtension<InBandRegistration>();
+            if ((loadExtensions & AvailableExtensions.ChatStateNotifications) == AvailableExtensions.ChatStateNotifications) chatStateNotifications = im.LoadExtension<ChatStateNotifications>();
+            if ((loadExtensions & AvailableExtensions.BitsOfBinary) == AvailableExtensions.BitsOfBinary) bitsOfBinary = im.LoadExtension<BitsOfBinary>();
+            if ((loadExtensions & AvailableExtensions.VCardAvatars) == AvailableExtensions.VCardAvatars) vcardAvatars = im.LoadExtension<VCardAvatars>();
+            if ((loadExtensions & AvailableExtensions.CustomIqExtension) == AvailableExtensions.CustomIqExtension) cusiqextension = im.LoadExtension<CustomIqExtension>();
+            if ((loadExtensions & AvailableExtensions.MultiUserChat) == AvailableExtensions.MultiUserChat) groupChat = im.LoadExtension<MultiUserChat>();
         }
     }
 }

@@ -1,171 +1,169 @@
-﻿<Sharp>
-  <Xmpp>
-    <Client>
-      <XmppClient name="GetFeatures">
-        <example>
-          This example shows how to use the GetFeatures method to print out a
-          list of features supported by the XMPP client of a chat contact.
-          <code language="c#">
-            string hostname = "jabber.se",
-              username = "myUsername",
-              password = "myPassword";
-            Jid juliet = "juliet@capulet.com/balcony";
+﻿<XMPPEngineer>
+	<Client>
+	  <XmppClient name="GetFeatures">
+	    <example>
+	      This example shows how to use the GetFeatures method to print out a
+	      list of features supported by the XMPP client of a chat contact.
+	      <code language="c#">
+	        string hostname = "jabber.se",
+	          username = "myUsername",
+	          password = "myPassword";
+	        Jid juliet = "juliet@capulet.com/balcony";
 
-            using (var cl = new XmppClient(hostname, username, password)) {
-              cl.Connect();
+	        using (var cl = new XmppClient(hostname, username, password)) {
+	          cl.Connect();
 
-              Console.WriteLine("Juliet's XMPP client supports: ");
-              foreach (var feat in cl.GetFeatures(juliet))
-                Console.WriteLine(" - " + feat);
-            }
-          </code>
-        </example>
-      </XmppClient>
-        <XmppClient name="SendMessage-1">
-          <example>
-            This example demonstrates how to use the SendMessage method in order
-            to send a chat-message to a contact.
-            <code language="c#">
-              string hostname = "jabber.se",
-                username = "myUsername",
-                password = "myPassword";
-              Jid juliet = "juliet@capulet.com/balcony";
+	          Console.WriteLine("Juliet's XMPP client supports: ");
+	          foreach (var feat in cl.GetFeatures(juliet))
+	            Console.WriteLine(" - " + feat);
+	        }
+	      </code>
+	    </example>
+	  </XmppClient>
+	    <XmppClient name="SendMessage-1">
+	      <example>
+	        This example demonstrates how to use the SendMessage method in order
+	        to send a chat-message to a contact.
+	        <code language="c#">
+	          string hostname = "jabber.se",
+	            username = "myUsername",
+	            password = "myPassword";
+	          Jid juliet = "juliet@capulet.com/balcony";
 
-              using (var cl = new XmppClient(hostname, username, password)) {
-                cl.Connect();
+	          using (var cl = new XmppClient(hostname, username, password)) {
+	            cl.Connect();
 
-                while(true) {
-                  Console.Write("Type a message or type 'quit' to exit: ");
-                  string s = Console.ReadLine();
-                  if(s == "quit")
-                    return;
-                  // Send the message to Juliet.
-                  cl.SendMessage(juliet, s);
-                }
-            }
-          </code>
-        </example>
-      </XmppClient>
-        <XmppClient name="SendMessage-2">
-          <example>
-            This example demonstrates how to use the SendMessage method in order
-            to send a multi-language chat-message to a contact.
-            <code language="c#">
-              string hostname = "jabber.se",
-                username = "myUsername",
-                password = "myPassword";
-              Jid juliet = "juliet@capulet.com/balcony";
+	            while(true) {
+	              Console.Write("Type a message or type 'quit' to exit: ");
+	              string s = Console.ReadLine();
+	              if(s == "quit")
+	                return;
+	              // Send the message to Juliet.
+	              cl.SendMessage(juliet, s);
+	            }
+	        }
+	      </code>
+	    </example>
+	  </XmppClient>
+	    <XmppClient name="SendMessage-2">
+	      <example>
+	        This example demonstrates how to use the SendMessage method in order
+	        to send a multi-language chat-message to a contact.
+	        <code language="c#">
+	          string hostname = "jabber.se",
+	            username = "myUsername",
+	            password = "myPassword";
+	          Jid juliet = "juliet@capulet.com/balcony";
 
-              using (var cl = new XmppClient(hostname, username, password)) {
-                cl.Connect();
+	          using (var cl = new XmppClient(hostname, username, password)) {
+	            cl.Connect();
 
-                cl.SendMessage(juliet, new Dictionary&lt;string, string&gt;() {
-                  { "en", "Hi, how are you?" },
-                  { "dk", "Hej, hvordan har du det?" },
-                  { "de", "Hallo, wie geht es dir?" },
-                  { "jp", "お元気ですか?" }
-                });
-              }
-          </code>
-        </example>
-      </XmppClient>
-      <XmppClient name="GetRoster">
-          <example>
-            This example demonstrates how to use the GetRoster method in order
-            to retrieve a list of all of the user's contacts.
-            <code language="c#">
-              string hostname = "jabber.se",
-                username = "myUsername",
-                password = "myPassword";
+	            cl.SendMessage(juliet, new Dictionary&lt;string, string&gt;() {
+	              { "en", "Hi, how are you?" },
+	              { "dk", "Hej, hvordan har du det?" },
+	              { "de", "Hallo, wie geht es dir?" },
+	              { "jp", "お元気ですか?" }
+	            });
+	          }
+	      </code>
+	    </example>
+	  </XmppClient>
+	  <XmppClient name="GetRoster">
+	      <example>
+	        This example demonstrates how to use the GetRoster method in order
+	        to retrieve a list of all of the user's contacts.
+	        <code language="c#">
+	          string hostname = "jabber.se",
+	            username = "myUsername",
+	            password = "myPassword";
 
-              using (var cl = new XmppClient(hostname, username, password)) {
-                cl.Connect();
+	          using (var cl = new XmppClient(hostname, username, password)) {
+	            cl.Connect();
 
-                Console.WriteLine("Contacts on " + cl.Jid.Node + "'s contact-list:");
-                foreach (var item in cl.GetRoster())
-                  Console.WriteLine(" - " + item.Jid);
-              }
-          </code>
-        </example>
-      </XmppClient>
-      <XmppClient name="SetTune">
-        <example>
-          This example demonstrates how to use the SetTune method in order
-          to publish tune information to other contacts.
-          <code language="c#">
-              string hostname = "jabber.se",
-                username = "myUsername",
-                password = "myPassword";
+	            Console.WriteLine("Contacts on " + cl.Jid.Node + "'s contact-list:");
+	            foreach (var item in cl.GetRoster())
+	              Console.WriteLine(" - " + item.Jid);
+	          }
+	      </code>
+	    </example>
+	  </XmppClient>
+	  <XmppClient name="SetTune">
+	    <example>
+	      This example demonstrates how to use the SetTune method in order
+	      to publish tune information to other contacts.
+	      <code language="c#">
+	          string hostname = "jabber.se",
+	            username = "myUsername",
+	            password = "myPassword";
 
-              using (var cl = new XmppClient(hostname, username, password)) {
-                cl.Connect();
+	          using (var cl = new XmppClient(hostname, username, password)) {
+	            cl.Connect();
 
-                // Let your contacts know what you are currently listening to.
-                cl.SetTune(new TuneInformation("Every Breath You Take", "The Police"));
+	            // Let your contacts know what you are currently listening to.
+	            cl.SetTune(new TuneInformation("Every Breath You Take", "The Police"));
 
-                Console.WriteLine("Type 'quit' to exit.");
-                while(Console.ReadLine() != "quit");
-            }
-          </code>
-        </example>
-      </XmppClient>
-      <XmppClient name="SetActivity">
-        <example>
-          This example demonstrates how to use the SetActivity method in order
-          to publish the user's current activity.
-          <code language="c#">
-              string hostname = "jabber.se",
-                username = "myUsername",
-                password = "myPassword";
+	            Console.WriteLine("Type 'quit' to exit.");
+	            while(Console.ReadLine() != "quit");
+	        }
+	      </code>
+	    </example>
+	  </XmppClient>
+	  <XmppClient name="SetActivity">
+	    <example>
+	      This example demonstrates how to use the SetActivity method in order
+	      to publish the user's current activity.
+	      <code language="c#">
+	          string hostname = "jabber.se",
+	            username = "myUsername",
+	            password = "myPassword";
 
-              using (var cl = new XmppClient(hostname, username, password)) {
-                cl.Connect();
+	          using (var cl = new XmppClient(hostname, username, password)) {
+	            cl.Connect();
 
-                // Let your contacts know what you are currently doing.
-                cl.SetActivity(GeneralActivity.Eating, SpecificActivity.HavingBreakfast);
+	            // Let your contacts know what you are currently doing.
+	            cl.SetActivity(GeneralActivity.Eating, SpecificActivity.HavingBreakfast);
 
-                Console.WriteLine("Type 'quit' to exit.");
-                while(Console.ReadLine() != "quit");
-            }
-          </code>
-        </example>
-      </XmppClient>
-      <XmppClient name="SubscriptionRequest">
-        <example>
-          This example demonstrates how to set up the SubscriptionRequest delegate in
-          order to process incoming subscription requests.
-          <code language="c#">
-            static void Main(string[] args) {
-              string hostname = "jabber.se",
-                username = "myUsername",
-                password = "myPassword";
+	            Console.WriteLine("Type 'quit' to exit.");
+	            while(Console.ReadLine() != "quit");
+	        }
+	      </code>
+	    </example>
+	  </XmppClient>
+	  <XmppClient name="SubscriptionRequest">
+	    <example>
+	      This example demonstrates how to set up the SubscriptionRequest delegate in
+	      order to process incoming subscription requests.
+	      <code language="c#">
+	        static void Main(string[] args) {
+	          string hostname = "jabber.se",
+	            username = "myUsername",
+	            password = "myPassword";
 
-              using (var cl = new XmppClient(hostname, username, password)) {
-                cl.SubscriptionRequest = OnSubscriptionRequest;
-                cl.Connect();
+	          using (var cl = new XmppClient(hostname, username, password)) {
+	            cl.SubscriptionRequest = OnSubscriptionRequest;
+	            cl.Connect();
 
-                // Put the thread to sleep and wait for subscription requests.
-                Thread.Sleep(Timeout.Infinite);
-              }
-            }
+	            // Put the thread to sleep and wait for subscription requests.
+	            Thread.Sleep(Timeout.Infinite);
+	          }
+	        }
 
-            /// &lt;summary&gt;
-            /// A callback method that is invoked whenever a subscription request from
-            /// another XMPP user is received.
-            /// &lt;/summary&gt;
-            /// &lt;param name="from"&gt;The JID of the XMPP user who wishes to subscribe to our
-            /// presence.&lt;/param&gt;
-            /// &lt;returns>true to approve the request; Otherwise false.&lt;/returns&gt;
-            static bool OnSubscriptionRequest(Jid from) {
-              Console.WriteLine(from + " wants to subscribe to your presence.");
-              Console.Write("Type Y to approve the request, or any other key to refuse it: ");
+	        /// &lt;summary&gt;
+	        /// A callback method that is invoked whenever a subscription request from
+	        /// another XMPP user is received.
+	        /// &lt;/summary&gt;
+	        /// &lt;param name="from"&gt;The JID of the XMPP user who wishes to subscribe to our
+	        /// presence.&lt;/param&gt;
+	        /// &lt;returns>true to approve the request; Otherwise false.&lt;/returns&gt;
+	        static bool OnSubscriptionRequest(Jid from) {
+	          Console.WriteLine(from + " wants to subscribe to your presence.");
+	          Console.Write("Type Y to approve the request, or any other key to refuse it: ");
 
-              // Return true to approve the request, or false to refuse it.
-              return Console.ReadLine().ToLowerInvariant() == "y";
-            }
-          </code>
-        </example>
-      </XmppClient>
-    </Client>
-  </Xmpp>
-</Sharp>
+	          // Return true to approve the request, or false to refuse it.
+	          return Console.ReadLine().ToLowerInvariant() == "y";
+	        }
+	      </code>
+	    </example>
+	  </XmppClient>
+	</Client>
+</XMPPEngineer>
